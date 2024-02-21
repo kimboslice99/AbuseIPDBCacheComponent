@@ -42,3 +42,6 @@ if (isBlockedByAbuseIPDB(oClient.IPAddress)) {
     return;
 }
 ```
+
+Reduction in API calls after implementation
+![api-savings](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/ApiSavings.PNG?raw=true)
