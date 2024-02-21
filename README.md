@@ -1,7 +1,7 @@
 
 # AbuseIPDBCacheComponent
 - This component caches any check for one hour, saving api calls as well as speeding up response time
-- Currently only have the check endpoint, more to come
+- Currently only have the check endpoint, since our focus here is to cache the check endpoint
 
 ## Example
 ```JavaScript
