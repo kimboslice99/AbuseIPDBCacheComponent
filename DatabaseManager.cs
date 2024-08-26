@@ -194,5 +194,18 @@ namespace AbuseIPDBCacheComponent
 
             return false;
         }
+
+        public static void DBOperation(string commandString)
+        {
+            using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
+            {
+                connection.Open();
+                using (SQLiteCommand command = new SQLiteCommand(connection))
+                {
+                    command.CommandText = commandString;
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

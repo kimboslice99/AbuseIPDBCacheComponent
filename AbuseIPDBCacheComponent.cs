@@ -1,7 +1,8 @@
-﻿using RestSharp;
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Net.Http.Headers;
+using System.Net.Http;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -12,6 +13,7 @@ namespace AbuseIPDBCacheComponent
         bool Block(string ip);
         // all of the check items
         bool IsSuccess();
+        string ErrorMessage();
         bool IsFromCache();
         string GetIpAddress();
         bool IsPublic();
@@ -31,6 +33,9 @@ namespace AbuseIPDBCacheComponent
         void SetMaxAgeInDays(int maxAgeInDays);
         void SetApiKey(string apiKey);
         void SetMaxConfidenceScore(int maxConfidenceScore);
+        void VacuumDB();
+        void ClearDB();
+        void ClearOldDB();
     }
 
     // Define a class that implements the COM interface
@@ -65,34 +70,40 @@ namespace AbuseIPDBCacheComponent
                     return true;
             }
 
-            using (RestClient client = new RestClient("https://api.abuseipdb.com/api/v2/"))
+            try
             {
-                var request = new RestRequest("check", Method.Get);
-
-                request.AddHeader("Key", apiKey);
-                request.AddHeader("Accept", "application/json");
-                request.AddParameter("ipAddress", ip);
-                request.AddParameter("maxAgeInDays", maxAgeInDays);
-                var restResponse = client.Execute(request);
-                if (restResponse.IsSuccessful && restResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+                using (HttpClient client = new HttpClient { BaseAddress = new Uri("https://api.abuseipdb.com/api/v2/") })
                 {
-                    response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(restResponse.Content);
-                    response.data.isSuccess = true;
+                    client.DefaultRequestHeaders.Add("Key", apiKey);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    // Cache the response
-                    DatabaseManager.CacheResponse(ip, response);
+                    var query = $"check?ipAddress={ip}&maxAgeInDays={maxAgeInDays}";
+                    HttpResponseMessage httpResponse = client.GetAsync(query).Result;
 
-                    if (response.data.abuseConfidenceScore < maxConfidenceScore)
-                        return false;
+                    if (httpResponse.IsSuccessStatusCode)
+                    {
+                        var content = httpResponse.Content.ReadAsStringAsync().Result;
+                        response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
+                        response.data.isSuccess = true;
+
+                        // Cache the response
+                        DatabaseManager.CacheResponse(ip, response);
+
+                        return response.data.abuseConfidenceScore >= maxConfidenceScore;
+                    }
                     else
-                        return true;
+                    {
+                        Debug.WriteLine("response not successful " + httpResponse.ReasonPhrase + " " + httpResponse.StatusCode);
+                        // Allow the client to connect if API failure code
+                        return false;
+                    }
                 }
-                else
-                {
-                    Debug.WriteLine("response not successful " + restResponse.ErrorMessage + " " + restResponse.StatusCode);
-                    // Allow the client to connect if api failure code
-                    return false;
-                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception: {ex}");
+                return false;
             }
         }
 
@@ -106,6 +117,11 @@ namespace AbuseIPDBCacheComponent
         public bool IsSuccess()
         {
             return response?.data?.isSuccess ?? false;
+        }
+
+        public string ErrorMessage()
+        {
+            return response?.data?.errorMessage ?? "";
         }
 
         public string GetIpAddress()
@@ -192,6 +208,21 @@ namespace AbuseIPDBCacheComponent
         {
             this.maxConfidenceScore = maxConfidenceScore;
         }
+
+        public void VacuumDB()
+        {
+            DatabaseManager.DBOperation("VACUUM");
+        }
+
+        public void ClearDB()
+        {
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses");
+        }
+
+        public void ClearOldDB()
+        {
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW', '-1 day')");
+        }
     }
 
     // Define a custom class to deserialize JSON response
@@ -203,6 +234,7 @@ namespace AbuseIPDBCacheComponent
     public class Data
     {
         public bool isSuccess { get; set; }
+        public string errorMessage { get; set; }
         public bool isFromCache { get; set; }
         public string ipAddress { get; set; }
         public bool isPublic { get; set; }
