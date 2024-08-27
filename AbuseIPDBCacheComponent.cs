@@ -16,7 +16,6 @@ namespace AbuseIPDBCacheComponent
         bool Report(string ip, string comment, string categories);
         // all of the check items
         bool IsSuccess();
-        string ErrorMessage();
         bool IsFromCache();
         string GetIpAddress();
         bool IsPublic();
@@ -174,11 +173,6 @@ namespace AbuseIPDBCacheComponent
         public bool IsSuccess()
         {
             return response?.data?.isSuccess ?? false;
-        }
-
-        public string ErrorMessage()
-        {
-            return response?.data?.errorMessage ?? "";
         }
 
         public string GetIpAddress()
