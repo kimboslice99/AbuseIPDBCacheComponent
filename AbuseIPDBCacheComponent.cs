@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http;
+using System.Web;
+using System.Collections.Specialized;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -11,6 +13,7 @@ namespace AbuseIPDBCacheComponent
     public interface AbuseIPDB
     {
         bool Block(string ip);
+        bool Report(string ip, string comment, string categories);
         // all of the check items
         bool IsSuccess();
         string ErrorMessage();
@@ -55,7 +58,56 @@ namespace AbuseIPDBCacheComponent
             DatabaseManager.InitializeDatabase();
         }
 
+        /// <summary>
+        /// Report an IP
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <param name="comment"></param>
+        /// <param name="categories"></param>
+        /// <returns></returns>
+        public bool Report(string ip, string categories, string comment = "")
+        {
+            try
+            {
+                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+                using (HttpClient client = new HttpClient { BaseAddress = new Uri("https://api.abuseipdb.com/api/v2/") })
+                {
+                    client.DefaultRequestHeaders.Add("Key", apiKey);
+                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+                    NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
+                    queryString.Add("ip", ip);
+                    queryString.Add("comment", comment);
+                    queryString.Add("categories", categories);
+
+                    HttpResponseMessage httpResponse = client.PostAsync($"report?{queryString.ToString()}", null).Result;
+
+                    if (httpResponse.IsSuccessStatusCode)
+                    {
+                        var content = httpResponse.Content.ReadAsStringAsync().Result;
+                        response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
+                        response.data.isSuccess = true;
+                        return true;
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"request to {client.BaseAddress}{queryString} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
+                        return false;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Exception: {ex.Message}");
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Check if an IP is listed, and meets the criteria to be blocked
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
             // Check if cached data exists and is not expired
@@ -78,8 +130,11 @@ namespace AbuseIPDBCacheComponent
                     client.DefaultRequestHeaders.Add("Key", apiKey);
                     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                    var query = $"check?ipAddress={ip}&maxAgeInDays={maxAgeInDays}";
-                    HttpResponseMessage httpResponse = client.GetAsync(query).Result;
+                    NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
+                    queryString.Add("ipAddress", ip);
+                    queryString.Add("maxAgeInDays", maxAgeInDays.ToString());
+
+                    HttpResponseMessage httpResponse = client.GetAsync($"check?{queryString.ToString()}").Result;
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
@@ -88,13 +143,15 @@ namespace AbuseIPDBCacheComponent
                         response.data.isSuccess = true;
 
                         // Cache the response
+#pragma warning disable
                         DatabaseManager.CacheResponse(ip, response);
+#pragma warning restore
 
                         return response.data.abuseConfidenceScore >= maxConfidenceScore;
                     }
                     else
                     {
-                        Debug.WriteLine("response not successful " + httpResponse.ReasonPhrase + " " + httpResponse.StatusCode);
+                        Debug.WriteLine($"request to {client.BaseAddress}{queryString} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
                         // Allow the client to connect if API failure code
                         return false;
                     }
@@ -211,17 +268,17 @@ namespace AbuseIPDBCacheComponent
 
         public void VacuumDB()
         {
-            DatabaseManager.DBOperation("VACUUM");
+            DatabaseManager.DBOperation("VACUUM", true);
         }
 
         public void ClearDB()
         {
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses");
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses", true);
         }
 
         public void ClearOldDB()
         {
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW', '-1 day')");
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW', '-1 day')", true);
         }
     }
 

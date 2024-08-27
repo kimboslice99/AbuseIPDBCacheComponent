@@ -195,7 +195,7 @@ namespace AbuseIPDBCacheComponent
             return false;
         }
 
-        public static void DBOperation(string commandString)
+        private static void ExecuteDatabaseOperation(string commandString)
         {
             using (SQLiteConnection connection = new SQLiteConnection(ConnectionString))
             {
@@ -205,6 +205,21 @@ namespace AbuseIPDBCacheComponent
                     command.CommandText = commandString;
                     command.ExecuteNonQuery();
                 }
+            }
+        }
+
+        public static void DBOperation(string commandString, bool lockThis = false)
+        {
+            if (lockThis)
+            {
+                lock (_lock)
+                {
+                    ExecuteDatabaseOperation(commandString);
+                }
+            }
+            else
+            {
+                ExecuteDatabaseOperation(commandString);
             }
         }
     }

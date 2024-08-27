@@ -1,9 +1,19 @@
 
 # AbuseIPDBCacheComponent
 - This component caches any check for one hour, saving api calls as well as speeding up response time
-- Currently only have the check endpoint, since our focus here is to cache the check endpoint
+- check and report endpoints have been implemented
 
-## Example
+## Example report
+```JavaScript
+var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");
+restClient.SetApiKey("ABUSEIPDB_APIKEY");
+var report = restClient.Report("127.0.0.1", "18", "comment");
+if(report){
+    // report was successful
+}
+```
+
+## Example check endpoint function
 ```JavaScript
 /**
  * response time on initial lookup depends upon your connection, but its 1-2ms if cached! :)
