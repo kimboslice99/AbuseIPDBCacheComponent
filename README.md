@@ -55,3 +55,20 @@ if (isBlockedByAbuseIPDB(oClient.IPAddress)) {
 
 Reduction in API calls after implementation
 ![api-savings](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/ApiSavings.PNG?raw=true)
+
+## Build and install
+- Clone the repo
+```cmd
+git clone https://github.com/kimboslice99/AbuseIPDBCacheComponent.git
+```
+
+- Build the assembly with msbuild.exe
+```cmd
+msbuild AbuseIPDBCacheComponent.csproj /p:Configuration=Release
+```
+
+- Register the assembly with Regasm.exe
+```cmd
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\Regasm.exe /codebase AbuseIPDBCacheComponent.dll
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Regasm.exe /codebase AbuseIPDBCacheComponent.dll
+```
