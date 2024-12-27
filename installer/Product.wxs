@@ -18,6 +18,14 @@
 		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
 		<Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" />
+		
+		<Condition Message="64-bit operating system detected, please use the 64-bit installer.">
+			<?if $(var.Win64) = "yes" ?>
+			VersionNT64
+			<?else ?>
+			NOT VersionNT64
+			<?endif ?>
+		</Condition>
 
 		<Feature Id="ProductFeature" Title="installer" Level="1">
 			<ComponentGroupRef Id="ProductComponents" />
