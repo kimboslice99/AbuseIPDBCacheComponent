@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+	<Product Id="*" Name="AbuseIPDBCacheComponent" Language="1033" Version="1.0.0.0" Manufacturer="kimboslice99" UpgradeCode="c1d9914b-4231-4b3f-83f3-c5221c39dfc8">
+		<Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
+
+		<!-- Define Win64 based on BUILDARCH -->
+		<?if $(sys.BUILDARCH) = x64 ?>
+		<?define Win64 = "yes" ?>
+		<?else ?>
+		<?define Win64 = "no" ?>
+		<?endif ?>
+
+		<Condition Message="This application is already installed.">
+			NOT Installed OR REMOVE="ALL"
+		</Condition>
+
+		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+
+		<Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="installer" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<!-- Ensure that directories are created based on the architecture -->
+			<?if $(var.Win64) = "yes" ?>
+			<Directory Id="ProgramFiles64Folder">
+				<Directory Id="INSTALLFOLDER" Name="AbuseIPDBCacheComponent">
+					<Directory Id="X64FOLDER" Name="x64" />
+					<Directory Id="X86FOLDER" Name="x86" />
+				</Directory>
+			</Directory>
+			<?else ?>
+			<Directory Id="ProgramFilesFolder">
+				<Directory Id="INSTALLFOLDER" Name="AbuseIPDBCacheComponent">
+					<Directory Id="X86FOLDER" Name="x86" />
+				</Directory>
+			</Directory>
+			<?endif ?>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+			<ComponentRef Id="AbuseIPDBCacheComponent" />
+
+			<?if $(var.Win64) = "yes" ?>
+			<ComponentRef Id="x64sqlite" />
+			<?endif ?>
+			<ComponentRef Id="x86sqlite" />
+		</ComponentGroup>
+	</Fragment>
+
+	<Fragment>
+		<?if $(var.Win64) = "yes" ?>
+		<DirectoryRef Id="X64FOLDER">
+			<Component Id="x64sqlite" Guid="C1262FEC-C6EF-4C95-A640-0BE139AE9E84">
+				<File Id="x64SQLite.Interop.dll" Source="..\bin\$(var.Configuration)\x64\SQLite.Interop.dll" Checksum="yes" KeyPath="yes" />
+			</Component>
+		</DirectoryRef>
+		<?endif ?>
+
+		<DirectoryRef Id="X86FOLDER">
+			<Component Id="x86sqlite" Guid="058614D7-CBD1-483B-AD4E-317A4BD49188">
+				<File Id="x86SQLite.Interop.dll" Source="..\bin\$(var.Configuration)\x86\SQLite.Interop.dll" Checksum="yes" KeyPath="yes" />
+			</Component>
+		</DirectoryRef>
+		<DirectoryRef Id="INSTALLFOLDER">
+			<Component Id="AbuseIPDBCacheComponent" Guid="8A060CC9-0A53-4C8A-855E-1351F8ACA9B1">
+				<!-- I used 'heat.exe file AbuseIPDBCacheComponent.dll -out AbuseIPDBCacheComponent.wxs' to generate this, then manually added the nodes for x86 -->
+				<Class Id="{00A9CB05-D30D-366A-B67F-2830B92F7F85}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.DatabaseManager" ThreadingModel="both" ForeignServer="mscoree.dll">
+					<ProgId Id="AbuseIPDBCacheComponent.DatabaseManager" Description="AbuseIPDBCacheComponent.DatabaseManager" />
+				</Class>
+				<Class Id="{23456789-2345-2345-2345-234567890ABC}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" ThreadingModel="both" ForeignServer="mscoree.dll">
+					<ProgId Id="AbuseIPDBCacheComponent.AbuseIPDBClient" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" />
+				</Class>
+				<Class Id="{5FBAB0D0-4774-3118-869B-4708167FEA37}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.Data" ThreadingModel="both" ForeignServer="mscoree.dll">
+					<ProgId Id="AbuseIPDBCacheComponent.Data" Description="AbuseIPDBCacheComponent.Data" />
+				</Class>
+				<Class Id="{7CB31545-6B5D-3D16-AF42-CEA103029DD1}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIpDbResponse" ThreadingModel="both" ForeignServer="mscoree.dll">
+					<ProgId Id="AbuseIPDBCacheComponent.AbuseIpDbResponse" Description="AbuseIPDBCacheComponent.AbuseIpDbResponse" />
+				</Class>
+				<File Id="filD08562EB0010707A31998B46B550ADBD" KeyPath="yes" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll" Checksum="yes" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.DatabaseManager" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.DatabaseManager" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.Data" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.Data" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIpDbResponse" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIpDbResponse" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<?if Win32 = "yes" ?>
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.DatabaseManager" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.DatabaseManager" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{00A9CB05-D30D-366A-B67F-2830B92F7F85}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.Data" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.Data" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{5FBAB0D0-4774-3118-869B-4708167FEA37}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIpDbResponse" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32\1.0.0.0" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIpDbResponse" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{7CB31545-6B5D-3D16-AF42-CEA103029DD1}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<?endif ?>
+				<File Id="AbuseIPDBCacheComponent.dll.config" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll.config" Checksum="yes" />
+				<File Id="AbuseIPDBCacheComponent.pdb" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.pdb" Checksum="yes" />
+				<File Id="EntityFramework.dll" Source="..\bin\$(var.Configuration)\EntityFramework.dll" Checksum="yes" />
+				<File Id="EntityFramework.SqlServer.dll" Source="..\bin\$(var.Configuration)\EntityFramework.SqlServer.dll" Checksum="yes" />
+				<File Id="EntityFramework.SqlServer.xml" Source="..\bin\$(var.Configuration)\EntityFramework.SqlServer.xml" Checksum="yes" />
+				<File Id="EntityFramework.xml" Source="..\bin\$(var.Configuration)\EntityFramework.xml" Checksum="yes" />
+				<File Id="Microsoft.Bcl.AsyncInterfaces.dll" Source="..\bin\$(var.Configuration)\Microsoft.Bcl.AsyncInterfaces.dll" Checksum="yes" />
+				<File Id="Microsoft.Bcl.AsyncInterfaces.xml" Source="..\bin\$(var.Configuration)\Microsoft.Bcl.AsyncInterfaces.xml" Checksum="yes" />
+				<File Id="Newtonsoft.Json.dll" Source="..\bin\$(var.Configuration)\Newtonsoft.Json.dll" Checksum="yes" />
+				<File Id="Newtonsoft.Json.xml" Source="..\bin\$(var.Configuration)\Newtonsoft.Json.xml" Checksum="yes" />
+				<File Id="System.Buffers.dll" Source="..\bin\$(var.Configuration)\System.Buffers.dll" Checksum="yes" />
+				<File Id="System.Buffers.xml" Source="..\bin\$(var.Configuration)\System.Buffers.xml" Checksum="yes" />
+				<File Id="System.Data.SQLite.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.dll" Checksum="yes" />
+				<File Id="System.Data.SQLite.EF6.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.EF6.dll" Checksum="yes" />
+				<File Id="System.Data.SQLite.Linq.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.Linq.dll" Checksum="yes" />
+				<File Id="System.Data.SQLite.xml" Source="..\bin\$(var.Configuration)\System.Data.SQLite.xml" Checksum="yes" />
+				<File Id="System.Memory.dll" Source="..\bin\$(var.Configuration)\System.Memory.dll" Checksum="yes" />
+				<File Id="System.Memory.xml" Source="..\bin\$(var.Configuration)\System.Memory.xml" Checksum="yes" />
+				<File Id="System.Numerics.Vectors.dll" Source="..\bin\$(var.Configuration)\System.Numerics.Vectors.dll" Checksum="yes" />
+				<File Id="System.Numerics.Vectors.xml" Source="..\bin\$(var.Configuration)\System.Numerics.Vectors.xml" Checksum="yes" />
+				<File Id="System.Runtime.CompilerServices.Unsafe.dll" Source="..\bin\$(var.Configuration)\System.Runtime.CompilerServices.Unsafe.dll" Checksum="yes" />
+				<File Id="System.Runtime.CompilerServices.Unsafe.xml" Source="..\bin\$(var.Configuration)\System.Runtime.CompilerServices.Unsafe.xml" Checksum="yes" />
+				<File Id="System.Text.Encodings.Web.dll" Source="..\bin\$(var.Configuration)\System.Text.Encodings.Web.dll" Checksum="yes" />
+				<File Id="System.Text.Encodings.Web.xml" Source="..\bin\$(var.Configuration)\System.Text.Encodings.Web.xml" Checksum="yes" />
+				<File Id="System.Text.Json.dll" Source="..\bin\$(var.Configuration)\System.Text.Json.dll" Checksum="yes" />
+				<File Id="System.Text.Json.xml" Source="..\bin\$(var.Configuration)\System.Text.Json.xml" Checksum="yes" />
+				<File Id="System.Threading.Tasks.Extensions.dll" Source="..\bin\$(var.Configuration)\System.Threading.Tasks.Extensions.dll" Checksum="yes" />
+				<File Id="System.Threading.Tasks.Extensions.xml" Source="..\bin\$(var.Configuration)\System.Threading.Tasks.Extensions.xml" Checksum="yes" />
+				<File Id="System.ValueTuple.dll" Source="..\bin\$(var.Configuration)\System.ValueTuple.dll" Checksum="yes" />
+				<File Id="System.ValueTuple.xml" Source="..\bin\$(var.Configuration)\System.ValueTuple.xml" Checksum="yes" />
+			</Component>
+		</DirectoryRef>
+	</Fragment>
+</Wix>
