@@ -10,7 +10,7 @@ namespace AbuseIPDBCacheComponent
 {
     // Define a COM interface
     [Guid("c1f9d247-e82d-4612-aa5b-ca3dde103a27")]
-    public interface AbuseIPDB
+    public interface IAbuseIPDB
     {
         bool Block(string ip);
         bool Report(string ip, string comment, string categories);
@@ -43,20 +43,24 @@ namespace AbuseIPDBCacheComponent
     // Define a class that implements the COM interface
     [Guid("23456789-2345-2345-2345-234567890ABC")]
     [ClassInterface(ClassInterfaceType.None)]
-    public class AbuseIPDBClient : AbuseIPDB
+    [ComVisible(true)]
+    public class AbuseIPDBClient : IAbuseIPDB, IDisposable
     {
         private int maxAgeInDays = 30; // Default value
         private int maxConfidenceScore = 50;
         private string apiKey = "";
         private AbuseIpDbResponse response;
 
-        // initialize the database, not sure I should call initialization once here or on every Check call?
-        // for sake of speed, i figure this would be good
         static AbuseIPDBClient()
         {
+            DatabaseManager.CreateConnection();
             DatabaseManager.InitializeDatabase();
         }
 
+        public void Dispose()
+        {
+            DatabaseManager.CloseConnection();
+        }
         /// <summary>
         /// Report an IP
         /// </summary>
@@ -142,9 +146,9 @@ namespace AbuseIPDBCacheComponent
                         response.data.isSuccess = true;
 
                         // Cache the response
-#pragma warning disable
+#pragma warning disable 4014
                         DatabaseManager.CacheResponse(ip, response);
-#pragma warning restore
+#pragma warning restore 4014
 
                         return response.data.abuseConfidenceScore >= maxConfidenceScore;
                     }
