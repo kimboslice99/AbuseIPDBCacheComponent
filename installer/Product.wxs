@@ -92,6 +92,10 @@
 				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
 				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
 				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<!-- For the component to register in dcomcnfg -->
+				<RegistryValue Root="HKCR" Key="AppID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Value="AbuseIPDBCacheComponent" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="AppID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Name="DllSurrogate" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\AppID" Value="{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Type="string" Action="write" />
 				<?if $(var.Win64) = "yes" ?>
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
