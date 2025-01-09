@@ -41,7 +41,7 @@ namespace AbuseIPDBCacheComponent
     }
 
     // Define a class that implements the COM interface
-    [Guid("23456789-2345-2345-2345-234567890ABC")]
+    [Guid("ECED3D83-2DE5-4C53-8B57-E95C6D90422D")]
     [ClassInterface(ClassInterfaceType.None)]
     [ComVisible(true)]
     public class AbuseIPDBClient : IAbuseIPDB, IDisposable
@@ -53,12 +53,14 @@ namespace AbuseIPDBCacheComponent
 
         static AbuseIPDBClient()
         {
+            Logger.LogToFile("Init()");
             DatabaseManager.CreateConnection();
             DatabaseManager.InitializeDatabase();
         }
 
         public void Dispose()
         {
+            Logger.LogToFile("Dispose()");
             DatabaseManager.CloseConnection();
         }
         /// <summary>
@@ -73,17 +75,19 @@ namespace AbuseIPDBCacheComponent
             try
             {
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
-                using (HttpClient client = new HttpClient { BaseAddress = new Uri("https://api.abuseipdb.com/api/v2/") })
+                HttpClient client = HttpClientSingleton.Instance;
+                using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
-                    client.DefaultRequestHeaders.Add("Key", apiKey);
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Add("Key", apiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ip", ip);
                     queryString.Add("comment", comment);
                     queryString.Add("categories", categories);
 
-                    HttpResponseMessage httpResponse = client.PostAsync($"report?{queryString.ToString()}", null).Result;
+                    request.RequestUri = new Uri(client.BaseAddress, $"report?{queryString}");
+
+                    HttpResponseMessage httpResponse = client.SendAsync(request).Result;
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
@@ -94,14 +98,16 @@ namespace AbuseIPDBCacheComponent
                     }
                     else
                     {
-                        Debug.WriteLine($"request to {client.BaseAddress}{queryString} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
+                        string msg = $"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}";
+                        Logger.LogToFile(msg);
                         return false;
                     }
                 }
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Exception: {ex.Message}");
+                string msg = $"Exception occured in Report() {ex.Message}";
+                Logger.LogToFile(msg);
             }
             return false;
         }
@@ -128,16 +134,16 @@ namespace AbuseIPDBCacheComponent
             try
             {
                 System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
-                using (HttpClient client = new HttpClient { BaseAddress = new Uri("https://api.abuseipdb.com/api/v2/") })
+                HttpClient client = HttpClientSingleton.Instance;
+                using (var request = new HttpRequestMessage(HttpMethod.Get, "report"))
                 {
-                    client.DefaultRequestHeaders.Add("Key", apiKey);
-                    client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Add("Key", apiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ipAddress", ip);
                     queryString.Add("maxAgeInDays", maxAgeInDays.ToString());
-
-                    HttpResponseMessage httpResponse = client.GetAsync($"check?{queryString.ToString()}").Result;
+                    request.RequestUri = new Uri(client.BaseAddress, $"check?{queryString}");
+                    HttpResponseMessage httpResponse = client.SendAsync(request).Result;
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
@@ -154,7 +160,8 @@ namespace AbuseIPDBCacheComponent
                     }
                     else
                     {
-                        Debug.WriteLine($"request to {client.BaseAddress}{queryString} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
+                        string msg = $"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}";
+                        Logger.LogToFile(msg);
                         // Allow the client to connect if API failure code
                         return false;
                     }
@@ -162,7 +169,7 @@ namespace AbuseIPDBCacheComponent
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Exception: {ex}");
+                Logger.LogToFile($"Exception occured in Block() {ex.Message}");
                 return false;
             }
         }

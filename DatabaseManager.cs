@@ -28,6 +28,7 @@ namespace AbuseIPDBCacheComponent
             _connection = new SQLiteConnection(ConnectionString);
             _connection.Open();
             _command = _connection.CreateCommand();
+            InitializeDatabase();
             return;
         }
 
@@ -41,9 +42,7 @@ namespace AbuseIPDBCacheComponent
 
         public static void InitializeDatabase()
         {
-            if (!File.Exists(DatabasePath))
-            {
-                string sql = @"CREATE TABLE IF NOT EXISTS CachedResponses (
+            string sql = @"CREATE TABLE IF NOT EXISTS CachedResponses (
                             IpAddress TEXT PRIMARY KEY,
                             IsPublic INTEGER,
                             IpVersion INTEGER,
@@ -60,10 +59,9 @@ namespace AbuseIPDBCacheComponent
                             LastReportedAt TEXT,
                             ExpirationDateTime TEXT
                         )";
-                _command.CommandText = sql;
-                _command.ExecuteNonQuery();
-                _command.CommandText = null;
-            }
+            _command.CommandText = sql;
+            _command.ExecuteNonQuery();
+            _command.CommandText = null;
         }
 
         /// <summary>

@@ -78,39 +78,30 @@
 		<DirectoryRef Id="INSTALLFOLDER">
 			<Component Id="AbuseIPDBCacheComponent" Guid="8A060CC9-0A53-4C8A-855E-1351F8ACA9B1">
 				<!-- I used 'heat.exe file AbuseIPDBCacheComponent.dll -out AbuseIPDBCacheComponent.wxs' to generate this, then manually added the nodes for x86 -->
-				<Class Id="{00A9CB05-D30D-366A-B67F-2830B92F7F85}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.DatabaseManager" ThreadingModel="both" ForeignServer="mscoree.dll">
-					<ProgId Id="AbuseIPDBCacheComponent.DatabaseManager" Description="AbuseIPDBCacheComponent.DatabaseManager" />
-				</Class>
-				<Class Id="{23456789-2345-2345-2345-234567890ABC}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" ThreadingModel="both" ForeignServer="mscoree.dll">
+				<Class Id="{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" ThreadingModel="both" ForeignServer="mscoree.dll">
 					<ProgId Id="AbuseIPDBCacheComponent.AbuseIPDBClient" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" />
 				</Class>
-				<Class Id="{5FBAB0D0-4774-3118-869B-4708167FEA37}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.Data" ThreadingModel="both" ForeignServer="mscoree.dll">
-					<ProgId Id="AbuseIPDBCacheComponent.Data" Description="AbuseIPDBCacheComponent.Data" />
-				</Class>
-				<Class Id="{7CB31545-6B5D-3D16-AF42-CEA103029DD1}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIpDbResponse" ThreadingModel="both" ForeignServer="mscoree.dll">
-					<ProgId Id="AbuseIPDBCacheComponent.AbuseIpDbResponse" Description="AbuseIPDBCacheComponent.AbuseIpDbResponse" />
-				</Class>
 				<File Id="filD08562EB0010707A31998B46B550ADBD" KeyPath="yes" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll" Checksum="yes" />
-				<!-- Registry keys -->
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<!-- Registry keys. Seems heat generated far too much -->
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
 				<?if $(var.Win64) = "yes" ?>
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32\1.0.0.1" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
-				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{23456789-2345-2345-2345-234567890ABC}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\Implemented Categories\{62C8FE65-4EBB-45e7-B440-6E39B2CDBF29}" Value="" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32\1.0.0.1" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Class" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=1.0.0.1, Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
 				<?endif ?>
 				<!-- Files -->
 				<File Id="AbuseIPDBCacheComponent.dll.config" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll.config" Checksum="yes" />

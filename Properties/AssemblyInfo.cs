@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("AbuseIPDBCacheComponent")]
-[assembly: AssemblyCopyright("Copyright © kimboslice99 2024")]
+[assembly: AssemblyCopyright("Copyright © kimboslice99 2025")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
