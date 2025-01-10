@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
-using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Web;
 using System.Collections.Specialized;
@@ -74,7 +72,7 @@ namespace AbuseIPDBCacheComponent
         {
             try
             {
-                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+                DateTime start = DateTime.Now;
                 HttpClient client = HttpClientSingleton.Instance;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
@@ -91,6 +89,7 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
+                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {(DateTime.Now - start).TotalMilliseconds}ms");
                         var content = httpResponse.Content.ReadAsStringAsync().Result;
                         response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
                         response.data.isSuccess = true;
@@ -119,12 +118,13 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
+            DateTime start = DateTime.Now;
             // Check if cached data exists and is not expired
             if (DatabaseManager.TryGetCachedResponse(ip, out response))
             {
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
-
+                Logger.LogToFile($"retreived cached data for {ip} process time {(DateTime.Now - start).TotalMilliseconds}ms");
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < maxConfidenceScore)
                     return false;
                 else
@@ -133,7 +133,6 @@ namespace AbuseIPDBCacheComponent
 
             try
             {
-                System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
                 HttpClient client = HttpClientSingleton.Instance;
                 using (var request = new HttpRequestMessage(HttpMethod.Get, "report"))
                 {
@@ -147,6 +146,7 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
+                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {(DateTime.Now - start).TotalMilliseconds}ms");
                         var content = httpResponse.Content.ReadAsStringAsync().Result;
                         response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
                         response.data.isSuccess = true;

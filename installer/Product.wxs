@@ -14,7 +14,7 @@
 			NOT Installed OR REMOVE="ALL"
 		</Condition>
 
-		<MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+		<MajorUpgrade AllowSameVersionUpgrades="no" DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
 
 		<Media Id="1" Cabinet="cab1.cab" EmbedCab="yes" />
 		
@@ -108,12 +108,9 @@
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
 				<?endif ?>
 				<!-- Files -->
+				<File Id="bindingRedirects.config" Source="..\bindingRedirects.config" />
 				<File Id="AbuseIPDBCacheComponent.dll.config" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll.config" Checksum="yes" />
 				<File Id="AbuseIPDBCacheComponent.pdb" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.pdb" Checksum="yes" />
-				<File Id="EntityFramework.dll" Source="..\bin\$(var.Configuration)\EntityFramework.dll" Checksum="yes" />
-				<File Id="EntityFramework.SqlServer.dll" Source="..\bin\$(var.Configuration)\EntityFramework.SqlServer.dll" Checksum="yes" />
-				<File Id="EntityFramework.SqlServer.xml" Source="..\bin\$(var.Configuration)\EntityFramework.SqlServer.xml" Checksum="yes" />
-				<File Id="EntityFramework.xml" Source="..\bin\$(var.Configuration)\EntityFramework.xml" Checksum="yes" />
 				<File Id="Microsoft.Bcl.AsyncInterfaces.dll" Source="..\bin\$(var.Configuration)\Microsoft.Bcl.AsyncInterfaces.dll" Checksum="yes" />
 				<File Id="Microsoft.Bcl.AsyncInterfaces.xml" Source="..\bin\$(var.Configuration)\Microsoft.Bcl.AsyncInterfaces.xml" Checksum="yes" />
 				<File Id="Newtonsoft.Json.dll" Source="..\bin\$(var.Configuration)\Newtonsoft.Json.dll" Checksum="yes" />
@@ -121,7 +118,6 @@
 				<File Id="System.Buffers.dll" Source="..\bin\$(var.Configuration)\System.Buffers.dll" Checksum="yes" />
 				<File Id="System.Buffers.xml" Source="..\bin\$(var.Configuration)\System.Buffers.xml" Checksum="yes" />
 				<File Id="System.Data.SQLite.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.dll" Checksum="yes" />
-				<File Id="System.Data.SQLite.EF6.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.EF6.dll" Checksum="yes" />
 				<File Id="System.Data.SQLite.Linq.dll" Source="..\bin\$(var.Configuration)\System.Data.SQLite.Linq.dll" Checksum="yes" />
 				<File Id="System.Data.SQLite.xml" Source="..\bin\$(var.Configuration)\System.Data.SQLite.xml" Checksum="yes" />
 				<File Id="System.Memory.dll" Source="..\bin\$(var.Configuration)\System.Memory.dll" Checksum="yes" />

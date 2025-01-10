@@ -123,7 +123,7 @@ namespace AbuseIPDBCacheComponent
                     _command.Parameters.AddWithValue("@TotalReports", response.data.totalReports);
                     _command.Parameters.AddWithValue("@NumDistinctUsers", response.data.numDistinctUsers);
                     _command.Parameters.AddWithValue("@LastReportedAt", response.data.lastReportedAt);
-                    _command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(1));
+                    _command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(Config.CacheTime));
                     _command.ExecuteNonQuery();
                     _command.Parameters.Clear();
                     _command.CommandText = null;
@@ -175,10 +175,6 @@ namespace AbuseIPDBCacheComponent
                             }
                         };
                         return true;
-                    }
-                    else
-                    {
-                        return false;
                     }
                 }
             }
