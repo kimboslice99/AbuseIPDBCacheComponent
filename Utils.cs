@@ -16,7 +16,7 @@ namespace AbuseIPDBCacheComponent
         {
 #if DEBUG
             try {
-                string dllPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                string dllPath = Assembly.GetExecutingAssembly().Location;
                 string dllDirectory = Path.GetDirectoryName(dllPath);
                 string path = Path.Combine(dllDirectory, "log.txt");
                 using (StreamWriter writer = new StreamWriter(path, true))
@@ -33,7 +33,7 @@ namespace AbuseIPDBCacheComponent
 
     public static class Config
     {
-        public static Configuration Configuration => ConfigurationManager.OpenExeConfiguration(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        public static Configuration Configuration => ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
 
         public static SecurityProtocolType Protocol
         {
@@ -86,10 +86,10 @@ namespace AbuseIPDBCacheComponent
                 return loadedAssembly;
             }
 
-            string dllPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+            string dllPath = Assembly.GetExecutingAssembly().Location;
             string dllDirectory = Path.GetDirectoryName(dllPath);
             string assemblyPath = Path.Combine(dllDirectory, $"{assemblyName}.dll");
-            if (System.IO.File.Exists(assemblyPath))
+            if (File.Exists(assemblyPath))
             {
                 return Assembly.LoadFrom(assemblyPath);
             }
