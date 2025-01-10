@@ -3,6 +3,8 @@ using System.Runtime.InteropServices;
 using System.Net.Http;
 using System.Web;
 using System.Collections.Specialized;
+using System.Text.Json;
+using System.Diagnostics;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -51,6 +53,7 @@ namespace AbuseIPDBCacheComponent
 
         static AbuseIPDBClient()
         {
+            AppDomain.CurrentDomain.AssemblyResolve += Config.MyResolveEventHandler;
             Logger.LogToFile("Init()");
             DatabaseManager.CreateConnection();
             DatabaseManager.InitializeDatabase();
@@ -72,7 +75,9 @@ namespace AbuseIPDBCacheComponent
         {
             try
             {
-                DateTime start = DateTime.Now;
+#if DEBUG
+                Stopwatch stopwatch = Stopwatch.StartNew();
+#endif
                 HttpClient client = HttpClientSingleton.Instance;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
@@ -89,9 +94,13 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {(DateTime.Now - start).TotalMilliseconds}ms");
-                        var content = httpResponse.Content.ReadAsStringAsync().Result;
-                        response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
+#if DEBUG
+                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+#endif
+                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().Result)
+                        {
+                            response = JsonSerializer.DeserializeAsync<AbuseIpDbResponse>(responseStream).Result;
+                        }
                         response.data.isSuccess = true;
                         return true;
                     }
@@ -118,13 +127,17 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
-            DateTime start = DateTime.Now;
+#if DEBUG
+            Stopwatch stopwatch = Stopwatch.StartNew();
+#endif
             // Check if cached data exists and is not expired
             if (DatabaseManager.TryGetCachedResponse(ip, out response))
             {
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
-                Logger.LogToFile($"retreived cached data for {ip} process time {(DateTime.Now - start).TotalMilliseconds}ms");
+#if DEBUG
+                Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+#endif
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < maxConfidenceScore)
                     return false;
                 else
@@ -146,9 +159,13 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {(DateTime.Now - start).TotalMilliseconds}ms");
-                        var content = httpResponse.Content.ReadAsStringAsync().Result;
-                        response = Newtonsoft.Json.JsonConvert.DeserializeObject<AbuseIpDbResponse>(content);
+#if DEBUG
+                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+#endif
+                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().Result)
+                        {
+                            response = JsonSerializer.Deserialize<AbuseIpDbResponse>(responseStream);
+                        }
                         response.data.isSuccess = true;
 
                         // Cache the response
@@ -170,6 +187,8 @@ namespace AbuseIPDBCacheComponent
             catch (Exception ex)
             {
                 Logger.LogToFile($"Exception occured in Block() {ex.Message}");
+                Logger.LogToFile(ex.InnerException.Message);
+                Logger.LogToFile(ex.InnerException.InnerException.Message);
                 return false;
             }
         }
