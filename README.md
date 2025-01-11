@@ -58,7 +58,7 @@ Reduction in API calls after implementation
 ![api-savings](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/ApiSavings.PNG?raw=true)
 
 Config tool
-![config-tool](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/configtool.png?raw=true)
+![config-tool](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/dev/img/configtool.png?raw=true)
 
 ## Build and register for development
 - Clone the repo
