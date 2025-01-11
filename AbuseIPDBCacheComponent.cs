@@ -9,11 +9,13 @@ using System.Diagnostics;
 namespace AbuseIPDBCacheComponent
 {
     // Define a COM interface
-    [Guid("c1f9d247-e82d-4612-aa5b-ca3dde103a27")]
+    [Guid("ECED3D83-2DE5-4C53-8B57-E95C6D90422D")]
+    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
+    [ComVisible(true)]
     public interface IAbuseIPDB
     {
         bool Block(string ip);
-        bool Report(string ip, string comment, string categories);
+        bool Report(string ip, string categories, string comment);
         // all of the check items
         bool IsSuccess();
         bool IsFromCache();
@@ -41,15 +43,15 @@ namespace AbuseIPDBCacheComponent
     }
 
     // Define a class that implements the COM interface
-    [Guid("ECED3D83-2DE5-4C53-8B57-E95C6D90422D")]
+    [Guid("c1f9d247-e82d-4612-aa5b-ca3dde103a27")]
     [ClassInterface(ClassInterfaceType.None)]
-    [ComVisible(true)]
-    public class AbuseIPDBClient : IAbuseIPDB, IDisposable
+    public class AbuseIPDBClient : IAbuseIPDB
     {
         private int maxAgeInDays = 30; // Default value
         private int maxConfidenceScore = 50;
         private string apiKey = "";
         private AbuseIpDbResponse response;
+        private readonly bool _loggingEnabled = Config.LoggingEnabled;
 
         static AbuseIPDBClient()
         {
@@ -59,11 +61,6 @@ namespace AbuseIPDBCacheComponent
             DatabaseManager.InitializeDatabase();
         }
 
-        public void Dispose()
-        {
-            Logger.LogToFile("Dispose()");
-            DatabaseManager.CloseConnection();
-        }
         /// <summary>
         /// Report an IP
         /// </summary>
@@ -75,10 +72,11 @@ namespace AbuseIPDBCacheComponent
         {
             try
             {
-#if DEBUG
-                Stopwatch stopwatch = Stopwatch.StartNew();
-#endif
+                Stopwatch stopwatch = null;
+                if(_loggingEnabled)
+                    stopwatch = Stopwatch.StartNew();
                 HttpClient client = HttpClientSingleton.Instance;
+                comment = string.IsNullOrEmpty(comment) ? $"{DateTime.Now}" : comment;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
                     request.Headers.Add("Key", apiKey);
@@ -90,16 +88,16 @@ namespace AbuseIPDBCacheComponent
 
                     request.RequestUri = new Uri(client.BaseAddress, $"report?{queryString}");
 
-                    HttpResponseMessage httpResponse = client.SendAsync(request).Result;
+                    HttpResponseMessage httpResponse = client.SendAsync(request).GetAwaiter().GetResult();
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-#if DEBUG
-                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
-#endif
-                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().Result)
+                        if (_loggingEnabled)
+                            Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+
+                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
                         {
-                            response = JsonSerializer.DeserializeAsync<AbuseIpDbResponse>(responseStream).Result;
+                            response = JsonSerializer.DeserializeAsync<AbuseIpDbResponse>(responseStream).GetAwaiter().GetResult();
                         }
                         response.data.isSuccess = true;
                         return true;
@@ -127,17 +125,18 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
-#if DEBUG
-            Stopwatch stopwatch = Stopwatch.StartNew();
-#endif
+            Stopwatch stopwatch = null;
+            if (_loggingEnabled)
+                stopwatch = Stopwatch.StartNew();
+
             // Check if cached data exists and is not expired
             if (DatabaseManager.TryGetCachedResponse(ip, out response))
             {
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
-#if DEBUG
-                Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
-#endif
+                if(_loggingEnabled)
+                    Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < maxConfidenceScore)
                     return false;
                 else
@@ -155,20 +154,20 @@ namespace AbuseIPDBCacheComponent
                     queryString.Add("ipAddress", ip);
                     queryString.Add("maxAgeInDays", maxAgeInDays.ToString());
                     request.RequestUri = new Uri(client.BaseAddress, $"check?{queryString}");
-                    HttpResponseMessage httpResponse = client.SendAsync(request).Result;
+                    HttpResponseMessage httpResponse = client.SendAsync(request).GetAwaiter().GetResult();
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-#if DEBUG
-                        Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
-#endif
-                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().Result)
+                        if(_loggingEnabled)
+                            Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+
+                        using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
                         {
                             response = JsonSerializer.Deserialize<AbuseIpDbResponse>(responseStream);
                         }
                         response.data.isSuccess = true;
 
-                        // Cache the response
+                        // Cache the response, dont wait on it
 #pragma warning disable 4014
                         DatabaseManager.CacheResponse(ip, response);
 #pragma warning restore 4014
@@ -177,8 +176,7 @@ namespace AbuseIPDBCacheComponent
                     }
                     else
                     {
-                        string msg = $"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}";
-                        Logger.LogToFile(msg);
+                        Logger.LogToFile($"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
                         // Allow the client to connect if API failure code
                         return false;
                     }
@@ -188,7 +186,6 @@ namespace AbuseIPDBCacheComponent
             {
                 Logger.LogToFile($"Exception occured in Block() {ex.Message}");
                 Logger.LogToFile(ex.InnerException.Message);
-                Logger.LogToFile(ex.InnerException.InnerException.Message);
                 return false;
             }
         }

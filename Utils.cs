@@ -7,6 +7,7 @@ using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -14,7 +15,8 @@ namespace AbuseIPDBCacheComponent
     {
         public static void LogToFile(string message)
         {
-#if DEBUG
+            if (!Config.LoggingEnabled)
+                return;
             try {
                 string dllPath = Assembly.GetExecutingAssembly().Location;
                 string dllDirectory = Path.GetDirectoryName(dllPath);
@@ -23,17 +25,19 @@ namespace AbuseIPDBCacheComponent
                 {
                     writer.WriteLine($"{DateTime.Now}: {message}");
                 } 
-            } catch
+            }
+            catch
             {
                 // do nothing if we dont have permission or some other error
             }
-#endif
         }
     }
 
     public static class Config
     {
         public static Configuration Configuration => ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
+
+        public static bool LoggingEnabled => Convert.ToBoolean(Configuration.AppSettings.Settings["EnableLogging"]?.Value);
 
         public static SecurityProtocolType Protocol
         {
@@ -61,7 +65,7 @@ namespace AbuseIPDBCacheComponent
             {
                 string cacheTimeSetting = Configuration.AppSettings.Settings["CacheTimeHours"]?.Value;
                 int setting = !string.IsNullOrEmpty(cacheTimeSetting) ? Convert.ToInt32(cacheTimeSetting) : 6;
-                Logger.LogToFile($"Cache time setting {setting}");
+                Logger.LogToFile($"Cache time setting {setting} hours");
                 return setting;
             }
         }
@@ -109,9 +113,15 @@ namespace AbuseIPDBCacheComponent
                 BaseAddress = new Uri("https://api.abuseipdb.com/api/v2/")
             };
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("AbuseIPDBCacheComponent");
             return client;
         }
 
         public static HttpClient Instance => instance;
+    }
+
+    public static class Utils
+    {
+        public static Stopwatch stopwatch => Stopwatch.StartNew();
     }
 }

@@ -1,7 +1,7 @@
-
 # AbuseIPDBCacheComponent
-- This component caches any check for one hour, saving api calls as well as speeding up response time
+- This component caches any check for 6 hours by default, saving api calls as well as speeding up response time.
 - check and report endpoints have been implemented
+- GUI configuration tool
 
 ## Example report
 ```JavaScript
@@ -45,6 +45,7 @@ function isBlockedByAbuseIPDB(strIP) {
     return Blocked;
 }
 ```
+
 ## Example use in hMailServer OnClientConnect()
 ```JavaScript
 if (isBlockedByAbuseIPDB(oClient.IPAddress)) {
@@ -56,7 +57,10 @@ if (isBlockedByAbuseIPDB(oClient.IPAddress)) {
 Reduction in API calls after implementation
 ![api-savings](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/ApiSavings.PNG?raw=true)
 
-## Build and install
+Config tool
+![config-tool](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/configtool.png?raw=true)
+
+## Build and register for development
 - Clone the repo
 ```cmd
 git clone https://github.com/kimboslice99/AbuseIPDBCacheComponent.git
