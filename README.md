@@ -59,9 +59,9 @@ Reduction in API calls after implementation
 
 Config tool
 
-![config-tool](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/dev/img/configtool.png?raw=true)
+![config-tool](https://github.com/kimboslice99/AbuseIPDBCacheComponent/blob/main/img/configtool.png?raw=true)
 
-## Build and register for development
+## Build and register component for development
 - Clone the repo
 ```cmd
 git clone https://github.com/kimboslice99/AbuseIPDBCacheComponent.git

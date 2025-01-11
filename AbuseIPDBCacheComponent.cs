@@ -5,6 +5,8 @@ using System.Web;
 using System.Collections.Specialized;
 using System.Text.Json;
 using System.Diagnostics;
+using System.Data.SQLite;
+using System.Net.Configuration;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -39,7 +41,7 @@ namespace AbuseIPDBCacheComponent
         void SetMaxConfidenceScore(int maxConfidenceScore);
         void VacuumDB();
         void ClearDB();
-        void ClearOldDB();
+        void ClearExpiredDB();
     }
 
     // Define a class that implements the COM interface
@@ -52,13 +54,16 @@ namespace AbuseIPDBCacheComponent
         private string apiKey = "";
         private AbuseIpDbResponse response;
         private readonly bool _loggingEnabled = Config.LoggingEnabled;
+        private object _lock = new object();
 
         static AbuseIPDBClient()
         {
             AppDomain.CurrentDomain.AssemblyResolve += Config.MyResolveEventHandler;
             Logger.LogToFile("Init()");
-            DatabaseManager.CreateConnection();
-            DatabaseManager.InitializeDatabase();
+            SQLiteConnection connection = DatabaseManager.CreateConnection();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.InitializeDatabase(command);
+            connection.Close();
         }
 
         /// <summary>
@@ -129,18 +134,30 @@ namespace AbuseIPDBCacheComponent
             if (_loggingEnabled)
                 stopwatch = Stopwatch.StartNew();
 
+            ClearExpiredDB();
+            SQLiteConnection connection = DatabaseManager.CreateConnection();
+            SQLiteCommand command = connection.CreateCommand();
             // Check if cached data exists and is not expired
-            if (DatabaseManager.TryGetCachedResponse(ip, out response))
+            if (DatabaseManager.TryGetCachedResponse(command, ip, out response))
             {
-                response.data.isSuccess = true;
-                response.data.isFromCache = true;
+                lock (_lock)
+                {
+                    response.data.isSuccess = true;
+                    response.data.isFromCache = true;
+                }
                 if(_loggingEnabled)
                     Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < maxConfidenceScore)
+                {
+                    DatabaseManager.CloseConnection(connection);
                     return false;
+                }
                 else
+                {
+                    DatabaseManager.CloseConnection(connection);
                     return true;
+                }
             }
 
             try
@@ -169,13 +186,13 @@ namespace AbuseIPDBCacheComponent
 
                         // Cache the response, dont wait on it
 #pragma warning disable 4014
-                        DatabaseManager.CacheResponse(ip, response);
+                        DatabaseManager.CacheResponseAndClose(command, ip, response);
 #pragma warning restore 4014
-
                         return response.data.abuseConfidenceScore >= maxConfidenceScore;
                     }
                     else
                     {
+                        DatabaseManager.CloseConnection(connection);
                         Logger.LogToFile($"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
                         // Allow the client to connect if API failure code
                         return false;
@@ -184,6 +201,7 @@ namespace AbuseIPDBCacheComponent
             }
             catch (Exception ex)
             {
+                DatabaseManager.CloseConnection(connection);
                 Logger.LogToFile($"Exception occured in Block() {ex.Message}");
                 Logger.LogToFile(ex.InnerException.Message);
                 return false;
@@ -194,112 +212,178 @@ namespace AbuseIPDBCacheComponent
 
         public bool IsFromCache()
         {
-            return response?.data?.isFromCache ?? false;
+            lock(_lock)
+            {
+                return response?.data?.isFromCache ?? false;
+            }
         }
 
         public bool IsSuccess()
         {
-            return response?.data?.isSuccess ?? false;
+            lock (_lock)
+            {
+                return response?.data?.isSuccess ?? false;
+            }
         }
 
         public string GetIpAddress()
         {
-            return response?.data?.ipAddress;
+            lock (_lock)
+            {
+                return response?.data?.ipAddress;
+            }
         }
 
         public bool IsPublic()
         {
-            return response?.data?.isPublic ?? false;
+            lock (_lock)
+            {
+                return response?.data?.isPublic ?? false;
+            }
         }
 
         public int GetIpVersion()
         {
-            return response?.data?.ipVersion ?? 0;
+            lock (_lock)
+            {
+                return response?.data?.ipVersion ?? 0;
+            }
         }
 
         public bool IsWhitelisted()
         {
-            return response?.data?.isWhitelisted ?? false;
+            lock (_lock)
+            {
+                return response?.data?.isWhitelisted ?? false;
+            }
         }
 
         public int GetAbuseConfidenceScore()
         {
-            return response?.data?.abuseConfidenceScore ?? 0;
+            lock (_lock)
+            {
+                return response?.data?.abuseConfidenceScore ?? 0;
+            }
         }
 
         public string GetCountryCode()
         {
-            return response?.data?.countryCode;
+            lock (_lock)
+            {
+                return response?.data?.countryCode;
+            }
         }
 
         public string GetCountryName()
         {
-            return response?.data?.countryName;
+            lock (_lock)
+            {
+                return response?.data?.countryName;
+            }
         }
 
         public string GetUsageType()
         {
-            return response?.data?.usageType;
+            lock (_lock)
+            {
+                return response?.data?.usageType;
+            }
         }
 
         public string GetISP()
         {
-            return response?.data?.isp;
+            lock (_lock)
+            {
+                return response?.data?.isp;
+            }
         }
 
         public string GetDomain()
         {
-            return response?.data?.domain;
+            lock (_lock)
+            {
+                return response?.data?.domain;
+            }
         }
 
         public bool IsTor()
         {
-            return response?.data?.isTor ?? false;
+            lock (_lock)
+            {
+                return response?.data?.isTor ?? false;
+            }
         }
 
         public int GetTotalReports()
         {
-            return response?.data?.totalReports ?? 0;
+            lock (_lock)
+            {
+                return response?.data?.totalReports ?? 0;
+            }
         }
 
         public int GetNumDistinctUsers()
         {
-            return response?.data?.numDistinctUsers ?? 0;
+            lock (_lock)
+            {
+                return response?.data?.numDistinctUsers ?? 0;
+            }
         }
 
         public DateTime GetLastReportedAt()
         {
-            return response?.data?.lastReportedAt ?? DateTime.MinValue;
+            lock (_lock)
+            {
+                return response?.data?.lastReportedAt ?? DateTime.MinValue;
+            }
         }
 
         public void SetMaxAgeInDays(int maxAgeInDays)
         {
-            this.maxAgeInDays = maxAgeInDays;
+            lock (_lock)
+            {
+                this.maxAgeInDays = maxAgeInDays;
+            }
         }
 
         public void SetApiKey(string apiKey)
         {
-            this.apiKey = apiKey;
+            lock (_lock)
+            {
+                this.apiKey = apiKey;
+            }
         }
 
         public void SetMaxConfidenceScore(int maxConfidenceScore)
         {
-            this.maxConfidenceScore = maxConfidenceScore;
+            lock (_lock)
+            {
+                this.maxConfidenceScore = maxConfidenceScore;
+            }
         }
 
         public void VacuumDB()
         {
-            DatabaseManager.DBOperation("VACUUM", true);
+            SQLiteConnection connection = DatabaseManager.CreateConnection();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "VACUUM", true);
+            connection.Close();
         }
 
         public void ClearDB()
         {
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses", true);
+            SQLiteConnection connection = DatabaseManager.CreateConnection();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses", true);
+            connection.Close();
         }
 
-        public void ClearOldDB()
+        public void ClearExpiredDB()
         {
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW', '-1 day')", true);
+            SQLiteConnection connection = DatabaseManager.CreateConnection();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')", true);
+            connection.Close();
         }
     }
 
@@ -329,21 +413,5 @@ namespace AbuseIPDBCacheComponent
         public int? numDistinctUsers { get; set; }
         public DateTime? lastReportedAt { get; set; }
         // Add more properties as needed for other data points
-    }
-
-    // Helper class for COM registration
-    public static class RegistrationHelper
-    {
-        public static void RegisterAssembly(System.Reflection.Assembly assembly, AssemblyRegistrationFlags flags)
-        {
-            RegistrationServices regsrv = new RegistrationServices();
-            regsrv.RegisterAssembly(assembly, flags);
-        }
-
-        public static void UnregisterAssembly(System.Reflection.Assembly assembly)
-        {
-            RegistrationServices regsrv = new RegistrationServices();
-            regsrv.UnregisterAssembly(assembly);
-        }
     }
 }
