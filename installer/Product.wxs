@@ -128,6 +128,9 @@
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="Assembly" Value="AbuseIPDBCacheComponent, Version=$(var.Version), Culture=neutral, PublicKeyToken=e996cd4ebdc98e78" Type="string" Action="write" />
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="RuntimeVersion" Value="v4.0.30319" Type="string" Action="write" />
 				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="CodeBase" Value="file:///[#filD08562EB0010707A31998B46B550ADBD]" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Name="ThreadingModel" Value="single" Type="string" Action="write" />
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}\InprocServer32" Value="mscoree.dll" Type="string" Action="write" /><!-- OOPS! -->
+				<RegistryValue Root="HKCR" Key="WOW6432Node\CLSID\{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Value="AbuseIPDBCacheComponent.AbuseIPDBClient" Type="string" Action="write" />
 				<?endif ?>
 				<!-- Files -->
 				<File Id="AbuseIPDBCacheComponent.dll.config" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll.config" Checksum="yes" />

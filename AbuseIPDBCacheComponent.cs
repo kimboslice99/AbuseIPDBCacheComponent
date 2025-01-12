@@ -162,7 +162,7 @@ namespace AbuseIPDBCacheComponent
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
                 if(Config.LoggingEnabled)
-                    Logger.LogToFile($"retreived cached data for {ip} score {response.data.abuseConfidenceScore} expires UTC {response.data.expirationDatetime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+                    Logger.LogToFile($"retreived cached data for {ip} score {response.data.abuseConfidenceScore} expires UTC {response.data.expirationDateTime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
@@ -368,7 +368,7 @@ namespace AbuseIPDBCacheComponent
         public int? totalReports { get; set; }
         public int? numDistinctUsers { get; set; }
         public DateTime? lastReportedAt { get; set; }
-        public DateTime? expirationDatetime { get; set; }
+        public DateTime? expirationDateTime { get; set; }
         // Add more properties as needed for other data points
     }
 }
