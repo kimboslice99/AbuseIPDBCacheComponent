@@ -99,7 +99,7 @@
 		<DirectoryRef Id="INSTALLFOLDER">
 			<Component Id="AbuseIPDBCacheComponent" Guid="8A060CC9-0A53-4C8A-855E-1351F8ACA9B1">
 				<!-- I used 'heat.exe file AbuseIPDBCacheComponent.dll -out AbuseIPDBCacheComponent.wxs' to generate this, then manually added the nodes for x86 -->
-				<Class Id="{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" ThreadingModel="both" ForeignServer="mscoree.dll">
+				<Class Id="{ECED3D83-2DE5-4C53-8B57-E95C6D90422D}" Context="InprocServer32" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" ThreadingModel="single" ForeignServer="mscoree.dll">
 					<ProgId Id="AbuseIPDBCacheComponent.AbuseIPDBClient" Description="AbuseIPDBCacheComponent.AbuseIPDBClient" />
 				</Class>
 				<File Id="filD08562EB0010707A31998B46B550ADBD" KeyPath="yes" Source="..\bin\$(var.Configuration)\AbuseIPDBCacheComponent.dll" Checksum="yes" />

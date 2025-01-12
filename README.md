@@ -21,6 +21,10 @@ if(report){
  */
 function isBlockedByAbuseIPDB(strIP) {
     var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");
+    // you dont need to set these as the master config is fine too
+    // restClient.SetApiKey(ABUSEIPDB_APIKEY);
+    // restClient.SetMinConfidenceScore(60);
+    // restClient.SetMaxAgeInDays(30);
 
     var Blocked = restClient.Block(strIP);
     
@@ -28,7 +32,6 @@ function isBlockedByAbuseIPDB(strIP) {
     
     var fromCache = restClient.IsFromCache();
     // we could extract other data that abuseipdb provides
-    // use ISE to explore the object ($obj = New-Object -ComObject AbuseIPDBCacheComponent.AbuseIPDBClient)
     // var isTor = restClient.IsTor();
     // var Isp = restClient.GetISP();
     // var totalReports = restClient.GetTotalReports();

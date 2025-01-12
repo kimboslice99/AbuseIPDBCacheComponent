@@ -125,9 +125,4 @@ namespace AbuseIPDBCacheComponent
 
         public static HttpClient Instance => instance;
     }
-
-    public static class Utils
-    {
-        public static Stopwatch stopwatch => Stopwatch.StartNew();
-    }
 }

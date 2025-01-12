@@ -5,7 +5,6 @@ using System.Web;
 using System.Collections.Specialized;
 using System.Text.Json;
 using System.Diagnostics;
-using System.Data.SQLite;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -34,6 +33,9 @@ namespace AbuseIPDBCacheComponent
         int GetTotalReports();
         int GetNumDistinctUsers();
         DateTime GetLastReportedAt();
+        void SetApiKey(string apiKey);
+        void SetMinConfidenceScore(int minConfidenceScore);
+        void SetMaxAge(int maxAge);
         void VacuumDB();
         void ClearDB();
         void ClearExpiredDB();
@@ -45,16 +47,16 @@ namespace AbuseIPDBCacheComponent
     public class AbuseIPDBClient : IAbuseIPDB
     {
         private AbuseIpDbResponse response;
-        private object _lock = new object();
+        private string _apiKey;
+        private string _minConfidenceScore;
+        private string _maxAge;
 
         static AbuseIPDBClient()
         {
             AppDomain.CurrentDomain.AssemblyResolve += Config.MyResolveEventHandler;
-            Logger.LogToFile("Init()");
-            SQLiteConnection connection = DatabaseManager.CreateConnection();
-            SQLiteCommand command = connection.CreateCommand();
-            DatabaseManager.InitializeDatabase(command);
-            connection.Close();
+            DatabaseManager.CreateConnection();
+            DatabaseManager.InitializeDatabase();
+            DatabaseManager.CloseConnection();
         }
 
         /// <summary>
@@ -66,7 +68,8 @@ namespace AbuseIPDBCacheComponent
         /// <returns></returns>
         public bool Report(string ip, string categories, string comment = "")
         {
-            if (string.IsNullOrEmpty(Config.ApiKey))
+            string localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
+            if (string.IsNullOrEmpty(localApiKey))
             {
                 Logger.LogToFile("Api key not set");
                 return false;
@@ -126,7 +129,12 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
-            if (string.IsNullOrEmpty(Config.ApiKey))
+            int localMinConfidenceScore = 
+                string.IsNullOrEmpty(_minConfidenceScore) ? Config.MinConfidenceScore : Convert.ToInt16(_minConfidenceScore);
+
+            string localMaxAge = string.IsNullOrEmpty(_maxAge) ? Config.MaxAgeInDays : _maxAge;
+            string localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
+            if (string.IsNullOrEmpty(localApiKey))
             {
                 Logger.LogToFile("Api key not set");
                 return false;
@@ -137,27 +145,24 @@ namespace AbuseIPDBCacheComponent
                 stopwatch = Stopwatch.StartNew();
 
             ClearExpiredDB();
-            SQLiteConnection connection = DatabaseManager.CreateConnection();
-            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.CreateConnection();
+            
             // Check if cached data exists and is not expired
-            if (DatabaseManager.TryGetCachedResponse(command, ip, out response))
+            if (DatabaseManager.TryGetCachedResponse(ip, out response))
             {
-                lock (_lock)
-                {
-                    response.data.isSuccess = true;
-                    response.data.isFromCache = true;
-                }
+                response.data.isSuccess = true;
+                response.data.isFromCache = true;
                 if(Config.LoggingEnabled)
                     Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
-                if (response != null && response.data != null && response.data.abuseConfidenceScore < Config.MinConfidenceScore)
+                if (response != null && response.data != null && response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
-                    DatabaseManager.CloseConnection(connection);
+                    DatabaseManager.CloseConnection();
                     return false;
                 }
                 else
                 {
-                    DatabaseManager.CloseConnection(connection);
+                    DatabaseManager.CloseConnection();
                     return true;
                 }
             }
@@ -171,7 +176,7 @@ namespace AbuseIPDBCacheComponent
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ipAddress", ip);
-                    queryString.Add("maxAgeInDays", Config.MaxAgeInDays);
+                    queryString.Add("maxAgeInDays", localMaxAge);
                     request.RequestUri = new Uri(client.BaseAddress, $"check?{queryString}");
                     HttpResponseMessage httpResponse = client.SendAsync(request).GetAwaiter().GetResult();
 
@@ -188,13 +193,13 @@ namespace AbuseIPDBCacheComponent
 
                         // Cache the response, dont wait on it
 #pragma warning disable 4014
-                        DatabaseManager.CacheResponseAndClose(command, ip, response);
+                        DatabaseManager.CacheResponseAndClose(ip, response);
 #pragma warning restore 4014
-                        return response.data.abuseConfidenceScore >= Config.MinConfidenceScore;
+                        return response.data.abuseConfidenceScore >= localMinConfidenceScore;
                     }
                     else
                     {
-                        DatabaseManager.CloseConnection(connection);
+                        DatabaseManager.CloseConnection();
                         Logger.LogToFile($"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
                         // Allow the client to connect if API failure code
                         return false;
@@ -203,7 +208,7 @@ namespace AbuseIPDBCacheComponent
             }
             catch (Exception ex)
             {
-                DatabaseManager.CloseConnection(connection);
+                DatabaseManager.CloseConnection();
                 Logger.LogToFile($"Exception occured in Block() {ex.Message}");
                 Logger.LogToFile(ex.InnerException.Message);
                 return false;
@@ -214,154 +219,118 @@ namespace AbuseIPDBCacheComponent
 
         public bool IsFromCache()
         {
-            lock(_lock)
-            {
-                return response?.data?.isFromCache ?? false;
-            }
+            return response?.data?.isFromCache ?? false;
         }
 
         public bool IsSuccess()
         {
-            lock (_lock)
-            {
-                return response?.data?.isSuccess ?? false;
-            }
+            return response?.data?.isSuccess ?? false;
         }
 
         public string GetIpAddress()
         {
-            lock (_lock)
-            {
-                return response?.data?.ipAddress;
-            }
+            return response?.data?.ipAddress;
         }
 
         public bool IsPublic()
         {
-            lock (_lock)
-            {
-                return response?.data?.isPublic ?? false;
-            }
+            return response?.data?.isPublic ?? false;
         }
 
         public int GetIpVersion()
         {
-            lock (_lock)
-            {
-                return response?.data?.ipVersion ?? 0;
-            }
+            return response?.data?.ipVersion ?? 0;
         }
 
         public bool IsWhitelisted()
         {
-            lock (_lock)
-            {
-                return response?.data?.isWhitelisted ?? false;
-            }
+            return response?.data?.isWhitelisted ?? false;
         }
 
         public int GetAbuseConfidenceScore()
         {
-            lock (_lock)
-            {
-                return response?.data?.abuseConfidenceScore ?? 0;
-            }
+            return response?.data?.abuseConfidenceScore ?? 0;
         }
 
         public string GetCountryCode()
         {
-            lock (_lock)
-            {
-                return response?.data?.countryCode;
-            }
+            return response?.data?.countryCode;
         }
 
         public string GetCountryName()
         {
-            lock (_lock)
-            {
-                return response?.data?.countryName;
-            }
+            return response?.data?.countryName;
         }
 
         public string GetUsageType()
         {
-            lock (_lock)
-            {
-                return response?.data?.usageType;
-            }
+            return response?.data?.usageType;
         }
 
         public string GetISP()
         {
-            lock (_lock)
-            {
-                return response?.data?.isp;
-            }
+            return response?.data?.isp;
         }
 
         public string GetDomain()
         {
-            lock (_lock)
-            {
-                return response?.data?.domain;
-            }
+            return response?.data?.domain;
         }
 
         public bool IsTor()
         {
-            lock (_lock)
-            {
-                return response?.data?.isTor ?? false;
-            }
+            return response?.data?.isTor ?? false;
         }
 
         public int GetTotalReports()
         {
-            lock (_lock)
-            {
-                return response?.data?.totalReports ?? 0;
-            }
+            return response?.data?.totalReports ?? 0;
         }
 
         public int GetNumDistinctUsers()
         {
-            lock (_lock)
-            {
-                return response?.data?.numDistinctUsers ?? 0;
-            }
+            return response?.data?.numDistinctUsers ?? 0;
         }
 
         public DateTime GetLastReportedAt()
         {
-            lock (_lock)
-            {
-                return response?.data?.lastReportedAt ?? DateTime.MinValue;
-            }
+            return response?.data?.lastReportedAt ?? DateTime.MinValue;
+        }
+
+        public void SetApiKey(string apiKey)
+        {
+            _apiKey = apiKey;
+        }
+
+        public void SetMinConfidenceScore(int minConfidenceScore)
+        {
+            _minConfidenceScore = minConfidenceScore.ToString();
+        }
+
+        public void SetMaxAge(int maxAge)
+        {
+            _maxAge = maxAge.ToString();
         }
 
         public void VacuumDB()
         {
-            SQLiteConnection connection = DatabaseManager.CreateConnection();
-            SQLiteCommand command = connection.CreateCommand();
-            DatabaseManager.DBOperation(command, "VACUUM", true);
-            connection.Close();
+            DatabaseManager.CreateConnection();
+            DatabaseManager.DBOperation("VACUUM");
+            DatabaseManager.CloseConnection();
         }
 
         public void ClearDB()
         {
-            SQLiteConnection connection = DatabaseManager.CreateConnection();
-            SQLiteCommand command = connection.CreateCommand();
-            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses", true);
-            connection.Close();
+            DatabaseManager.CreateConnection();
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses");
+            DatabaseManager.CloseConnection();
         }
 
         public void ClearExpiredDB()
         {
-            SQLiteConnection connection = DatabaseManager.CreateConnection();
-            SQLiteCommand command = connection.CreateCommand();
-            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')", true);
-            connection.Close();
+            DatabaseManager.CreateConnection();
+            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')");
+            DatabaseManager.CloseConnection();
         }
     }
 
