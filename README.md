@@ -2,6 +2,13 @@
 - This component caches any check for 6 hours (by default), saving api calls as well as speeding up response time.
 - check and report endpoints have been implemented
 - GUI configuration tool
+- Component now correctly cleans its own database from expired entires
+
+### Configurable items include
+- TLS1.2/TLS1.3
+- Static config for MaxAgeInDays, MinimumConfidenceScore and API key so it doesnt need to be set at runtime (but still can be)
+- Cache time (hours)
+- Logging (for debugging and seeing response times)
 
 ## Example report
 ```JavaScript
@@ -23,7 +30,7 @@ function isBlockedByAbuseIPDB(strIP) {
     var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");
     // you dont need to set these as the master config is fine too
     // restClient.SetApiKey(ABUSEIPDB_APIKEY);
-    // restClient.SetMinConfidenceScore(60);
+    // restClient.SetMinConfidenceScore(50);
     // restClient.SetMaxAgeInDays(30);
 
     var Blocked = restClient.Block(strIP);
