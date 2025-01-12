@@ -6,7 +6,6 @@ using System.Collections.Specialized;
 using System.Text.Json;
 using System.Diagnostics;
 using System.Data.SQLite;
-using System.Net.Configuration;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -35,10 +34,6 @@ namespace AbuseIPDBCacheComponent
         int GetTotalReports();
         int GetNumDistinctUsers();
         DateTime GetLastReportedAt();
-        // set global variables
-        void SetMaxAgeInDays(int maxAgeInDays);
-        void SetApiKey(string apiKey);
-        void SetMaxConfidenceScore(int maxConfidenceScore);
         void VacuumDB();
         void ClearDB();
         void ClearExpiredDB();
@@ -49,11 +44,7 @@ namespace AbuseIPDBCacheComponent
     [ClassInterface(ClassInterfaceType.None)]
     public class AbuseIPDBClient : IAbuseIPDB
     {
-        private int maxAgeInDays = 30; // Default value
-        private int maxConfidenceScore = 50;
-        private string apiKey = "";
         private AbuseIpDbResponse response;
-        private readonly bool _loggingEnabled = Config.LoggingEnabled;
         private object _lock = new object();
 
         static AbuseIPDBClient()
@@ -75,16 +66,21 @@ namespace AbuseIPDBCacheComponent
         /// <returns></returns>
         public bool Report(string ip, string categories, string comment = "")
         {
+            if (string.IsNullOrEmpty(Config.ApiKey))
+            {
+                Logger.LogToFile("Api key not set");
+                return false;
+            }
             try
             {
                 Stopwatch stopwatch = null;
-                if(_loggingEnabled)
+                if(Config.LoggingEnabled)
                     stopwatch = Stopwatch.StartNew();
                 HttpClient client = HttpClientSingleton.Instance;
                 comment = string.IsNullOrEmpty(comment) ? $"{DateTime.Now}" : comment;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
-                    request.Headers.Add("Key", apiKey);
+                    request.Headers.Add("Key", Config.ApiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ip", ip);
@@ -97,7 +93,7 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-                        if (_loggingEnabled)
+                        if (Config.LoggingEnabled)
                             Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                         using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
@@ -130,8 +126,14 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
+            if (string.IsNullOrEmpty(Config.ApiKey))
+            {
+                Logger.LogToFile("Api key not set");
+                return false;
+            }
+
             Stopwatch stopwatch = null;
-            if (_loggingEnabled)
+            if (Config.LoggingEnabled)
                 stopwatch = Stopwatch.StartNew();
 
             ClearExpiredDB();
@@ -145,10 +147,10 @@ namespace AbuseIPDBCacheComponent
                     response.data.isSuccess = true;
                     response.data.isFromCache = true;
                 }
-                if(_loggingEnabled)
+                if(Config.LoggingEnabled)
                     Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
-                if (response != null && response.data != null && response.data.abuseConfidenceScore < maxConfidenceScore)
+                if (response != null && response.data != null && response.data.abuseConfidenceScore < Config.MinConfidenceScore)
                 {
                     DatabaseManager.CloseConnection(connection);
                     return false;
@@ -165,17 +167,17 @@ namespace AbuseIPDBCacheComponent
                 HttpClient client = HttpClientSingleton.Instance;
                 using (var request = new HttpRequestMessage(HttpMethod.Get, "report"))
                 {
-                    request.Headers.Add("Key", apiKey);
+                    request.Headers.Add("Key", Config.ApiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ipAddress", ip);
-                    queryString.Add("maxAgeInDays", maxAgeInDays.ToString());
+                    queryString.Add("maxAgeInDays", Config.MaxAgeInDays);
                     request.RequestUri = new Uri(client.BaseAddress, $"check?{queryString}");
                     HttpResponseMessage httpResponse = client.SendAsync(request).GetAwaiter().GetResult();
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-                        if(_loggingEnabled)
+                        if(Config.LoggingEnabled)
                             Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                         using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
@@ -188,7 +190,7 @@ namespace AbuseIPDBCacheComponent
 #pragma warning disable 4014
                         DatabaseManager.CacheResponseAndClose(command, ip, response);
 #pragma warning restore 4014
-                        return response.data.abuseConfidenceScore >= maxConfidenceScore;
+                        return response.data.abuseConfidenceScore >= Config.MinConfidenceScore;
                     }
                     else
                     {
@@ -335,30 +337,6 @@ namespace AbuseIPDBCacheComponent
             lock (_lock)
             {
                 return response?.data?.lastReportedAt ?? DateTime.MinValue;
-            }
-        }
-
-        public void SetMaxAgeInDays(int maxAgeInDays)
-        {
-            lock (_lock)
-            {
-                this.maxAgeInDays = maxAgeInDays;
-            }
-        }
-
-        public void SetApiKey(string apiKey)
-        {
-            lock (_lock)
-            {
-                this.apiKey = apiKey;
-            }
-        }
-
-        public void SetMaxConfidenceScore(int maxConfidenceScore)
-        {
-            lock (_lock)
-            {
-                this.maxConfidenceScore = maxConfidenceScore;
             }
         }
 

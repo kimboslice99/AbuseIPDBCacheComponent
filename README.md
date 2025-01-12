@@ -1,12 +1,11 @@
 # AbuseIPDBCacheComponent
-- This component caches any check for 6 hours by default, saving api calls as well as speeding up response time.
+- This component caches any check for 6 hours (by default), saving api calls as well as speeding up response time.
 - check and report endpoints have been implemented
 - GUI configuration tool
 
 ## Example report
 ```JavaScript
 var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");
-restClient.SetApiKey("ABUSEIPDB_APIKEY");
 var report = restClient.Report("127.0.0.1", "18", "comment");
 if(report){
     // report was successful
@@ -22,9 +21,6 @@ if(report){
  */
 function isBlockedByAbuseIPDB(strIP) {
     var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");
-    restClient.SetApiKey(ABUSEIPDB_APIKEY);
-    restClient.SetMaxConfidenceScore(60);
-    restClient.SetMaxAgeInDays(30);
 
     var Blocked = restClient.Block(strIP);
     
@@ -32,6 +28,7 @@ function isBlockedByAbuseIPDB(strIP) {
     
     var fromCache = restClient.IsFromCache();
     // we could extract other data that abuseipdb provides
+    // use ISE to explore the object ($obj = New-Object -ComObject AbuseIPDBCacheComponent.AbuseIPDBClient)
     // var isTor = restClient.IsTor();
     // var Isp = restClient.GetISP();
     // var totalReports = restClient.GetTotalReports();

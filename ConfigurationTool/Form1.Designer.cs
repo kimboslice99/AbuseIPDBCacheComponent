@@ -36,16 +36,22 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             this.tlslabel = new System.Windows.Forms.Label();
             this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.cacheTimeBox = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.labelCacheTimeHours = new System.Windows.Forms.Label();
+            this.maxAge = new System.Windows.Forms.TextBox();
+            this.minConfidenceScore = new System.Windows.Forms.TextBox();
+            this.labelMaxAge = new System.Windows.Forms.Label();
+            this.labelMinConfidenceScore = new System.Windows.Forms.Label();
+            this.abuseipdbApiKey = new System.Windows.Forms.TextBox();
+            this.apikeylabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // submit
             // 
-            this.submit.Location = new System.Drawing.Point(62, 115);
+            this.submit.Location = new System.Drawing.Point(89, 177);
             this.submit.Name = "submit";
-            this.submit.Size = new System.Drawing.Size(75, 23);
+            this.submit.Size = new System.Drawing.Size(75, 25);
             this.submit.TabIndex = 0;
-            this.submit.Text = "Ok";
+            this.submit.Text = "Save";
             this.submit.UseVisualStyleBackColor = true;
             this.submit.Click += new System.EventHandler(this.submit_Click);
             // 
@@ -55,15 +61,15 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             this.tlsComboBox.Items.AddRange(new object[] {
             "TLS1.2",
             "TLS1.3"});
-            this.tlsComboBox.Location = new System.Drawing.Point(40, 65);
+            this.tlsComboBox.Location = new System.Drawing.Point(127, 33);
             this.tlsComboBox.Name = "tlsComboBox";
-            this.tlsComboBox.Size = new System.Drawing.Size(120, 21);
+            this.tlsComboBox.Size = new System.Drawing.Size(112, 21);
             this.tlsComboBox.TabIndex = 1;
             // 
             // tlslabel
             // 
             this.tlslabel.AutoSize = true;
-            this.tlslabel.Location = new System.Drawing.Point(68, 49);
+            this.tlslabel.Location = new System.Drawing.Point(124, 17);
             this.tlslabel.Name = "tlslabel";
             this.tlslabel.Size = new System.Drawing.Size(64, 13);
             this.tlslabel.TabIndex = 2;
@@ -72,7 +78,7 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             // checkBox1
             // 
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(53, 92);
+            this.checkBox1.Location = new System.Drawing.Point(82, 154);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(96, 17);
             this.checkBox1.TabIndex = 3;
@@ -81,27 +87,83 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             // 
             // cacheTimeBox
             // 
-            this.cacheTimeBox.Location = new System.Drawing.Point(50, 26);
+            this.cacheTimeBox.Location = new System.Drawing.Point(12, 34);
             this.cacheTimeBox.Name = "cacheTimeBox";
-            this.cacheTimeBox.Size = new System.Drawing.Size(100, 20);
+            this.cacheTimeBox.Size = new System.Drawing.Size(96, 20);
             this.cacheTimeBox.TabIndex = 4;
-            this.cacheTimeBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.cacheTimeBox_KeyPress);
+            this.cacheTimeBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.digit_KeyPress);
             // 
-            // label1
+            // labelCacheTimeHours
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(50, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(99, 13);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Cache Time (hours)";
+            this.labelCacheTimeHours.AutoSize = true;
+            this.labelCacheTimeHours.Location = new System.Drawing.Point(9, 18);
+            this.labelCacheTimeHours.Name = "labelCacheTimeHours";
+            this.labelCacheTimeHours.Size = new System.Drawing.Size(99, 13);
+            this.labelCacheTimeHours.TabIndex = 5;
+            this.labelCacheTimeHours.Text = "Cache Time (hours)";
+            // 
+            // maxAge
+            // 
+            this.maxAge.Location = new System.Drawing.Point(12, 84);
+            this.maxAge.Name = "maxAge";
+            this.maxAge.Size = new System.Drawing.Size(96, 20);
+            this.maxAge.TabIndex = 6;
+            this.maxAge.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.digit_KeyPress);
+            // 
+            // minConfidenceScore
+            // 
+            this.minConfidenceScore.Location = new System.Drawing.Point(127, 84);
+            this.minConfidenceScore.Name = "minConfidenceScore";
+            this.minConfidenceScore.Size = new System.Drawing.Size(112, 20);
+            this.minConfidenceScore.TabIndex = 7;
+            this.minConfidenceScore.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.digit_KeyPress);
+            // 
+            // labelMaxAge
+            // 
+            this.labelMaxAge.AutoSize = true;
+            this.labelMaxAge.Location = new System.Drawing.Point(12, 68);
+            this.labelMaxAge.Name = "labelMaxAge";
+            this.labelMaxAge.Size = new System.Drawing.Size(82, 13);
+            this.labelMaxAge.TabIndex = 8;
+            this.labelMaxAge.Text = "Max Age (Days)";
+            // 
+            // labelMinConfidenceScore
+            // 
+            this.labelMinConfidenceScore.AutoSize = true;
+            this.labelMinConfidenceScore.Location = new System.Drawing.Point(124, 68);
+            this.labelMinConfidenceScore.Name = "labelMinConfidenceScore";
+            this.labelMinConfidenceScore.Size = new System.Drawing.Size(112, 13);
+            this.labelMinConfidenceScore.TabIndex = 9;
+            this.labelMinConfidenceScore.Text = "Min Confidence Score";
+            // 
+            // abuseipdbApiKey
+            // 
+            this.abuseipdbApiKey.Location = new System.Drawing.Point(12, 126);
+            this.abuseipdbApiKey.Name = "abuseipdbApiKey";
+            this.abuseipdbApiKey.Size = new System.Drawing.Size(224, 20);
+            this.abuseipdbApiKey.TabIndex = 10;
+            // 
+            // apikeylabel
+            // 
+            this.apikeylabel.AutoSize = true;
+            this.apikeylabel.Location = new System.Drawing.Point(12, 110);
+            this.apikeylabel.Name = "apikeylabel";
+            this.apikeylabel.Size = new System.Drawing.Size(43, 13);
+            this.apikeylabel.TabIndex = 11;
+            this.apikeylabel.Text = "Api Key";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(200, 148);
-            this.Controls.Add(this.label1);
+            this.ClientSize = new System.Drawing.Size(252, 212);
+            this.Controls.Add(this.apikeylabel);
+            this.Controls.Add(this.abuseipdbApiKey);
+            this.Controls.Add(this.labelMinConfidenceScore);
+            this.Controls.Add(this.labelMaxAge);
+            this.Controls.Add(this.minConfidenceScore);
+            this.Controls.Add(this.maxAge);
+            this.Controls.Add(this.labelCacheTimeHours);
             this.Controls.Add(this.cacheTimeBox);
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.tlslabel);
@@ -124,7 +186,13 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
         private System.Windows.Forms.Label tlslabel;
         private System.Windows.Forms.CheckBox checkBox1;
         private System.Windows.Forms.TextBox cacheTimeBox;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelCacheTimeHours;
+        private TextBox maxAge;
+        private TextBox minConfidenceScore;
+        private Label labelMaxAge;
+        private Label labelMinConfidenceScore;
+        private TextBox abuseipdbApiKey;
+        private Label apikeylabel;
     }
 }
 

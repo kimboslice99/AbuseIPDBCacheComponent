@@ -126,8 +126,7 @@ namespace AbuseIPDBCacheComponent
                     command.Parameters.AddWithValue("@NumDistinctUsers", response.data.numDistinctUsers);
                     command.Parameters.AddWithValue("@LastReportedAt", response.data.lastReportedAt);
                     command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(Config.CacheTime));
-                    int result = command.ExecuteNonQuery();
-                    Logger.LogToFile($"CacheResponse() {result}");
+                    command.ExecuteNonQuery();
                     command.Connection.Close();
                 }
             });
@@ -144,44 +143,45 @@ namespace AbuseIPDBCacheComponent
         public static bool TryGetCachedResponse(SQLiteCommand command, string ip, out AbuseIpDbResponse response)
         {
             response = null;
-            
-            command.CommandText = "SELECT * FROM CachedResponses WHERE IpAddress = @IpAddress";
-            command.Parameters.AddWithValue("@IpAddress", ip);
-            using (SQLiteDataReader reader = command.ExecuteReader())
+            lock (_lock)
             {
-                command.Parameters.Clear();
-                if (reader.Read())
+                command.CommandText = "SELECT * FROM CachedResponses WHERE IpAddress = @IpAddress";
+                command.Parameters.AddWithValue("@IpAddress", ip);
+                using (SQLiteDataReader reader = command.ExecuteReader())
                 {
-                    DateTime expirationDateTime = reader.GetDateTime(reader.GetOrdinal("ExpirationDateTime"));
-                    if (expirationDateTime > DateTime.Now)
+                    command.Parameters.Clear();
+                    if (reader.Read())
                     {
-                        response = new AbuseIpDbResponse
+                        DateTime expirationDateTime = reader.GetDateTime(reader.GetOrdinal("ExpirationDateTime"));
+                        if (expirationDateTime > DateTime.Now)
                         {
-                            data = new Data
+                            response = new AbuseIpDbResponse
                             {
-                                isFromCache = true,
-                                isSuccess = true,
-                                ipAddress = Convert.ToString(reader["IpAddress"]),
-                                isPublic = Convert.ToBoolean(reader["IsPublic"]),
-                                ipVersion = Convert.ToInt32(reader["IpVersion"]),
-                                isWhitelisted = reader.IsDBNull(reader.GetOrdinal("IsWhitelisted")) ? false : Convert.ToBoolean(reader["IsWhitelisted"]),
-                                abuseConfidenceScore = Convert.ToInt32(reader["AbuseConfidenceScore"]),
-                                countryCode = Convert.ToString(reader["CountryCode"]),
-                                countryName = Convert.ToString(reader["CountryName"]),
-                                usageType = Convert.ToString(reader["UsageType"]),
-                                isp = Convert.ToString(reader["ISP"]),
-                                domain = Convert.ToString(reader["Domain"]),
-                                isTor = reader.IsDBNull(reader.GetOrdinal("IsTor")) ? false : Convert.ToBoolean(reader["IsTor"]),
-                                totalReports = reader.IsDBNull(reader.GetOrdinal("TotalReports")) ? 0 : Convert.ToInt32(reader["TotalReports"]),
-                                numDistinctUsers = reader.IsDBNull(reader.GetOrdinal("NumDistinctUsers")) ? 0 : Convert.ToInt32(reader["NumDistinctUsers"]),
-                                lastReportedAt = reader.IsDBNull(reader.GetOrdinal("LastReportedAt")) ? (DateTime?)null : Convert.ToDateTime(reader["LastReportedAt"])
-                            }
-                        };
-                        return true;
+                                data = new Data
+                                {
+                                    isFromCache = true,
+                                    isSuccess = true,
+                                    ipAddress = Convert.ToString(reader["IpAddress"]),
+                                    isPublic = Convert.ToBoolean(reader["IsPublic"]),
+                                    ipVersion = Convert.ToInt32(reader["IpVersion"]),
+                                    isWhitelisted = reader.IsDBNull(reader.GetOrdinal("IsWhitelisted")) ? false : Convert.ToBoolean(reader["IsWhitelisted"]),
+                                    abuseConfidenceScore = Convert.ToInt32(reader["AbuseConfidenceScore"]),
+                                    countryCode = Convert.ToString(reader["CountryCode"]),
+                                    countryName = Convert.ToString(reader["CountryName"]),
+                                    usageType = Convert.ToString(reader["UsageType"]),
+                                    isp = Convert.ToString(reader["ISP"]),
+                                    domain = Convert.ToString(reader["Domain"]),
+                                    isTor = reader.IsDBNull(reader.GetOrdinal("IsTor")) ? false : Convert.ToBoolean(reader["IsTor"]),
+                                    totalReports = reader.IsDBNull(reader.GetOrdinal("TotalReports")) ? 0 : Convert.ToInt32(reader["TotalReports"]),
+                                    numDistinctUsers = reader.IsDBNull(reader.GetOrdinal("NumDistinctUsers")) ? 0 : Convert.ToInt32(reader["NumDistinctUsers"]),
+                                    lastReportedAt = reader.IsDBNull(reader.GetOrdinal("LastReportedAt")) ? (DateTime?)null : Convert.ToDateTime(reader["LastReportedAt"]),
+                                }
+                            };
+                            return true;
+                        }
                     }
                 }
             }
-
             return false;
         }
 

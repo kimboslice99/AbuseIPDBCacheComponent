@@ -35,15 +35,21 @@ namespace AbuseIPDBCacheComponent
 
     public static class Config
     {
-        public static Configuration Configuration => ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
+        public static Configuration AssemblyConfig => ConfigurationManager.OpenExeConfiguration(Assembly.GetExecutingAssembly().Location);
 
-        public static bool LoggingEnabled => Convert.ToBoolean(Configuration.AppSettings.Settings["EnableLogging"]?.Value);
+        public static bool LoggingEnabled => Convert.ToBoolean(AssemblyConfig.AppSettings.Settings["EnableLogging"]?.Value);
+
+        public static string ApiKey => AssemblyConfig.AppSettings.Settings["ApiKey"]?.Value;
+
+        public static string MaxAgeInDays => AssemblyConfig.AppSettings.Settings["MaxAgeInDays"]?.Value;
+
+        public static int MinConfidenceScore => Convert.ToInt16(AssemblyConfig.AppSettings.Settings["MinConfidenceScore"]?.Value);
 
         public static SecurityProtocolType Protocol
         {
             get
             {
-                string securityProtocolSetting = Configuration.AppSettings.Settings["HttpClientProtocol"]?.Value;
+                string securityProtocolSetting = AssemblyConfig.AppSettings.Settings["HttpClientProtocol"]?.Value;
                 switch (securityProtocolSetting)
                 {
                     case "TLS1.2":
@@ -63,7 +69,7 @@ namespace AbuseIPDBCacheComponent
         {
             get
             {
-                string cacheTimeSetting = Configuration.AppSettings.Settings["CacheTimeHours"]?.Value;
+                string cacheTimeSetting = AssemblyConfig.AppSettings.Settings["CacheTimeHours"]?.Value;
                 int setting = !string.IsNullOrEmpty(cacheTimeSetting) ? Convert.ToInt32(cacheTimeSetting) : 6;
                 Logger.LogToFile($"Cache time setting {setting} hours");
                 return setting;
