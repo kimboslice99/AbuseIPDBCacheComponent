@@ -44,12 +44,13 @@ namespace AbuseIPDBCacheComponent
     // Define a class that implements the COM interface
     [Guid("c1f9d247-e82d-4612-aa5b-ca3dde103a27")]
     [ClassInterface(ClassInterfaceType.None)]
+    [ComVisible(true)]
     public class AbuseIPDBClient : IAbuseIPDB
     {
         private AbuseIpDbResponse response;
         private string _apiKey;
-        private string _minConfidenceScore;
-        private string _maxAge;
+        private int? _minConfidenceScore = null;
+        private int? _maxAge = null;
 
         static AbuseIPDBClient()
         {
@@ -129,14 +130,22 @@ namespace AbuseIPDBCacheComponent
         /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
-            int localMinConfidenceScore = 
-                string.IsNullOrEmpty(_minConfidenceScore) ? Config.MinConfidenceScore : Convert.ToInt16(_minConfidenceScore);
-
-            string localMaxAge = string.IsNullOrEmpty(_maxAge) ? Config.MaxAgeInDays : _maxAge;
+            int localMinConfidenceScore = _minConfidenceScore == null ? Config.MinConfidenceScore : (int)_minConfidenceScore;
+            int localMaxAge = _maxAge == null ? Config.MaxAgeInDays : (int)_maxAge;
             string localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
             if (string.IsNullOrEmpty(localApiKey))
             {
                 Logger.LogToFile("Api key not set");
+                return false;
+            }
+            if(localMaxAge > 365 || localMaxAge < 1)
+            {
+                Logger.LogToFile("MaxAgeInDays out of valid range 1-365");
+                return false;
+            }
+            if(localMinConfidenceScore < 1 || localMinConfidenceScore > 100)
+            {
+                Logger.LogToFile("MinConfidenceScore out of valid range 0-100");
                 return false;
             }
 
@@ -153,7 +162,7 @@ namespace AbuseIPDBCacheComponent
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
                 if(Config.LoggingEnabled)
-                    Logger.LogToFile($"retreived cached data for {ip} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+                    Logger.LogToFile($"retreived cached data for {ip} score {response.data.abuseConfidenceScore} expires UTC {response.data.expirationDatetime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
@@ -176,7 +185,7 @@ namespace AbuseIPDBCacheComponent
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ipAddress", ip);
-                    queryString.Add("maxAgeInDays", localMaxAge);
+                    queryString.Add("maxAgeInDays", Convert.ToString(localMaxAge));
                     request.RequestUri = new Uri(client.BaseAddress, $"check?{queryString}");
                     HttpResponseMessage httpResponse = client.SendAsync(request).GetAwaiter().GetResult();
 
@@ -304,12 +313,12 @@ namespace AbuseIPDBCacheComponent
 
         public void SetMinConfidenceScore(int minConfidenceScore)
         {
-            _minConfidenceScore = minConfidenceScore.ToString();
+            _minConfidenceScore = minConfidenceScore;
         }
 
         public void SetMaxAge(int maxAge)
         {
-            _maxAge = maxAge.ToString();
+            _maxAge = maxAge;
         }
 
         public void VacuumDB()
@@ -359,6 +368,7 @@ namespace AbuseIPDBCacheComponent
         public int? totalReports { get; set; }
         public int? numDistinctUsers { get; set; }
         public DateTime? lastReportedAt { get; set; }
+        public DateTime? expirationDatetime { get; set; }
         // Add more properties as needed for other data points
     }
 }

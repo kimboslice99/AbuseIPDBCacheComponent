@@ -41,7 +41,7 @@ namespace AbuseIPDBCacheComponent
 
         public static string ApiKey => AssemblyConfig.AppSettings.Settings["ApiKey"]?.Value;
 
-        public static string MaxAgeInDays => AssemblyConfig.AppSettings.Settings["MaxAgeInDays"]?.Value;
+        public static int MaxAgeInDays => Convert.ToInt16(AssemblyConfig.AppSettings.Settings["MaxAgeInDays"]?.Value);
 
         public static int MinConfidenceScore => Convert.ToInt16(AssemblyConfig.AppSettings.Settings["MinConfidenceScore"]?.Value);
 

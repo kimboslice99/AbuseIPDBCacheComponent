@@ -173,6 +173,7 @@ namespace AbuseIPDBCacheComponent
                                 totalReports = reader.IsDBNull(reader.GetOrdinal("TotalReports")) ? 0 : Convert.ToInt32(reader["TotalReports"]),
                                 numDistinctUsers = reader.IsDBNull(reader.GetOrdinal("NumDistinctUsers")) ? 0 : Convert.ToInt32(reader["NumDistinctUsers"]),
                                 lastReportedAt = reader.IsDBNull(reader.GetOrdinal("LastReportedAt")) ? (DateTime?)null : Convert.ToDateTime(reader["LastReportedAt"]),
+                                expirationDateTime = reader.IsDBNull(reader.GetOrdinal("ExpirationDateTime")) ? (DateTime?)null : Convert.ToDateTime(reader["ExpirationDateTime"]),
                             }
                         };
                         return true;
