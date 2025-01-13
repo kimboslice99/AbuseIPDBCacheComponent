@@ -10,9 +10,6 @@
 - Cache time (hours)
 - Logging (for debugging and seeing response times)
 
-### Known bugs
-- I have yet to diagnose this but the component does not work from Powershell 7. Working fine in VBScript, JSCript and Powershell 5.1, however.
-
 ## Example report
 ```JavaScript
 var restClient = new ActiveXObject("AbuseIPDBCacheComponent.AbuseIPDBClient");

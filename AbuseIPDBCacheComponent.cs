@@ -43,7 +43,7 @@ namespace AbuseIPDBCacheComponent
     }
 
     // Define a class that implements the COM interface
-    [Guid("c1f9d247-e82d-4612-aa5b-ca3dde103a27")]
+    [Guid("EE286CF0-BB11-4AA7-BF75-3127E643CB6C")]
     [ClassInterface(ClassInterfaceType.None)]
     [ComVisible(true)]
     public class AbuseIPDBClient : IAbuseIPDB

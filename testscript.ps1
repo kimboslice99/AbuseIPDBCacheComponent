@@ -25,14 +25,14 @@ if(isBlockedByAbuseIPDB('$IP')){
     WScript.Echo('false');
 }
 "@
-    $tempFile = [IO.Path]::GetTempFileName() -replace '\.tmp$', '.js'
+    $tempFile = $Env:Temp + ((Get-Date).ToUniversalTime() - (Get-Date "1970-01-01")).TotalSeconds + '.js'
     Set-Content -Path $tempFile -Value $JScript -Encoding ASCII
     if($x86 -eq $false){
         & C:\Windows\System32\cscript.exe //nologo $tempFile
     } else {
         & C:\Windows\sysWOW64\cscript.exe //nologo $tempFile
     }
-    Remove-Item -Path $tempFile
+    Remove-Item -Path $tempFile -Force
 }
 
 function TestWScript {
@@ -60,14 +60,14 @@ Else
     WScript.Echo("false")
 End If
 "@
-    $tempFile = [IO.Path]::GetTempFileName() -replace '\.tmp$', '.vbs'
+    $tempFile = $Env:Temp + ((Get-Date).ToUniversalTime() - (Get-Date "1970-01-01")).TotalSeconds + '.vbs'
     Set-Content -Path $tempFile -Value $WScript -Encoding ASCII
     if($x86 -eq $false){
         & C:\Windows\System32\cscript.exe //nologo $tempFile
     } else {
         & C:\Windows\sysWOW64\cscript.exe //nologo $tempFile
     }
-    Remove-Item -Path $tempFile
+    Remove-Item -Path $tempFile -Force
 }
 
 function TestPowershell {
@@ -86,14 +86,14 @@ function IsBlockedByAbuseIPDB {
 `$result = IsBlockedByAbuseIPDB $IP
 Write-Host `$result
 "@
-    $tempFile = [IO.Path]::GetTempFileName() -replace '\.tmp$', '.ps1'
+    $tempFile = $Env:Temp + ((Get-Date).ToUniversalTime() - (Get-Date "1970-01-01")).TotalSeconds + '.ps1'
     Set-Content -Path $tempFile -Value $Powershell -Encoding ASCII
     if($x86 -eq $false){
         & C:\Windows\System32\WindowsPowerShell\v1.0\Powershell.exe -File $tempFile
     } else {
         & C:\Windows\SysWOW64\WindowsPowerShell\v1.0\Powershell.exe -File $tempFile
     }
-    Remove-Item -Path $tempFile
+    Remove-Item -Path $tempFile -Force
 }
 
 function TestPowershell7 {
@@ -112,25 +112,25 @@ function IsBlockedByAbuseIPDB {
 `$result = IsBlockedByAbuseIPDB $IP
 Write-Host `$result
 "@
-    $tempFile = [IO.Path]::GetTempFileName() -replace '\.tmp$', '.ps1'
+    $tempFile = $Env:Temp + ((Get-Date).ToUniversalTime() - (Get-Date "1970-01-01")).TotalSeconds + ".ps1"
     Set-Content -Path $tempFile -Value $Powershell -Encoding ASCII
     if($x86 -eq $false){
         & pwsh.exe -File $tempFile
     } else {
         & pwh.exe -File $tempFile
     }
-    Remove-Item -Path $tempFile
+    Remove-Item -Path $tempFile -Force
 }
 
 $IPToTest = "127.0.0.1"
 
 Write-Host "Testing JScriptx64"
 TestJScript $IPToTest
-Write-Host "Testing WScriptx64"
-TestWScript $IPToTest
-
 Write-Host "Testing JScriptx86"
 TestJScript $IPToTest $true
+
+Write-Host "Testing WScriptx64"
+TestWScript $IPToTest
 Write-Host "Testing WScriptx86"
 TestWScript $IPToTest $true
 
@@ -139,5 +139,6 @@ TestPowershell $IPToTest
 Write-Host "Testing Powershell 5.1 x86"
 TestPowershell $IPToTest $true
 
+# Element not found? hmm
 Write-Host "Testing Powershell 7 x64"
 TestPowershell7 $IPToTest
