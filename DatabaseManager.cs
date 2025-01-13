@@ -52,7 +52,6 @@ namespace AbuseIPDBCacheComponent
                             IsWhitelisted INTEGER,
                             AbuseConfidenceScore INTEGER,
                             CountryCode TEXT,
-                            CountryName TEXT,
                             UsageType TEXT,
                             ISP TEXT,
                             Domain TEXT,
@@ -84,7 +83,6 @@ namespace AbuseIPDBCacheComponent
                                 IsWhitelisted,
                                 AbuseConfidenceScore,
                                 CountryCode,
-                                CountryName,
                                 UsageType,
                                 ISP,
                                 Domain,
@@ -100,7 +98,6 @@ namespace AbuseIPDBCacheComponent
                                 @IsWhitelisted,
                                 @AbuseConfidenceScore,
                                 @CountryCode,
-                                @CountryName,
                                 @UsageType,
                                 @ISP,
                                 @Domain,
@@ -116,7 +113,6 @@ namespace AbuseIPDBCacheComponent
                 command.Parameters.AddWithValue("@IsWhitelisted", response.data.isWhitelisted);
                 command.Parameters.AddWithValue("@AbuseConfidenceScore", response.data.abuseConfidenceScore);
                 command.Parameters.AddWithValue("@CountryCode", response.data.countryCode);
-                command.Parameters.AddWithValue("@CountryName", response.data.countryName);
                 command.Parameters.AddWithValue("@UsageType", response.data.usageType);
                 command.Parameters.AddWithValue("@ISP", response.data.isp);
                 command.Parameters.AddWithValue("@Domain", response.data.domain);
@@ -167,7 +163,6 @@ namespace AbuseIPDBCacheComponent
                                 isWhitelisted = reader.IsDBNull(reader.GetOrdinal("IsWhitelisted")) ? false : Convert.ToBoolean(reader["IsWhitelisted"]),
                                 abuseConfidenceScore = Convert.ToInt32(reader["AbuseConfidenceScore"]),
                                 countryCode = Convert.ToString(reader["CountryCode"]),
-                                countryName = Convert.ToString(reader["CountryName"]),
                                 usageType = Convert.ToString(reader["UsageType"]),
                                 isp = Convert.ToString(reader["ISP"]),
                                 domain = Convert.ToString(reader["Domain"]),

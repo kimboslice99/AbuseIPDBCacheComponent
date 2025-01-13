@@ -219,11 +219,6 @@ namespace AbuseIPDBCacheComponent
             return _response?.data?.countryCode;
         }
 
-        public string GetCountryName()
-        {
-            return _response?.data?.countryName;
-        }
-
         public string GetUsageType()
         {
             return _response?.data?.usageType;
@@ -313,7 +308,6 @@ namespace AbuseIPDBCacheComponent
         public bool? isWhitelisted { get; set; }
         public int abuseConfidenceScore { get; set; }
         public string countryCode { get; set; }
-        public string countryName { get; set; }
         public string usageType { get; set; }
         public string isp { get; set; }
         public string domain { get; set; }
