@@ -73,10 +73,11 @@ namespace AbuseIPDBCacheComponent
         /// <param name="ip"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static async Task CacheResponseAndClose(SQLiteCommand command, string ip, AbuseIpDbResponse response)
+        public static void CacheResponseAndClose(SQLiteCommand command, string ip, AbuseIpDbResponse response)
         {
-            await Task.Run(() =>
+            try
             {
+                Logger.LogToFile($"Caching {ip} for {Config.CacheTime} hours");
                 command.CommandText = @"INSERT OR REPLACE INTO CachedResponses (
                                 IpAddress,
                                 IsPublic,
@@ -127,7 +128,11 @@ namespace AbuseIPDBCacheComponent
                 command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(Config.CacheTime));
                 command.ExecuteNonQuery();
                 command.Connection.Close();
-            });
+            }
+            catch (Exception ex)
+            {
+                Logger.LogToFile($"CacheResponseAndClose {ex.Message}");
+            }
         }
 
 

@@ -14,7 +14,7 @@ namespace AbuseIPDBCacheComponent
     [ComVisible(true)]
     public class AbuseIPDBClient
     {
-        private AbuseIpDbResponse response;
+        private AbuseIpDbResponse _response;
         private string _apiKey;
         private int? _minConfidenceScore = null;
         private int? _maxAge = null;
@@ -28,13 +28,6 @@ namespace AbuseIPDBCacheComponent
             DatabaseManager.CloseConnection(connection);
         }
 
-        /// <summary>
-        /// Report an IP
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <param name="comment"></param>
-        /// <param name="categories"></param>
-        /// <returns></returns>
         public bool Report(string ip, string categories, string comment = "")
         {
             string localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
@@ -46,13 +39,13 @@ namespace AbuseIPDBCacheComponent
             try
             {
                 Stopwatch stopwatch = null;
-                if(Config.LoggingEnabled)
+                if (Config.LoggingEnabled)
                     stopwatch = Stopwatch.StartNew();
                 HttpClient client = HttpClientSingleton.Instance;
                 comment = string.IsNullOrEmpty(comment) ? $"{DateTime.Now}" : comment;
                 using (var request = new HttpRequestMessage(HttpMethod.Post, "report"))
                 {
-                    request.Headers.Add("Key", Config.ApiKey);
+                    request.Headers.Add("Key", localApiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ip", ip);
@@ -70,9 +63,9 @@ namespace AbuseIPDBCacheComponent
 
                         using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
                         {
-                            response = JsonSerializer.DeserializeAsync<AbuseIpDbResponse>(responseStream).GetAwaiter().GetResult();
+                            _response = JsonSerializer.DeserializeAsync<AbuseIpDbResponse>(responseStream).GetAwaiter().GetResult();
                         }
-                        response.data.isSuccess = true;
+                        _response.data.isSuccess = true;
                         return true;
                     }
                     else
@@ -85,35 +78,33 @@ namespace AbuseIPDBCacheComponent
             }
             catch (Exception ex)
             {
-                string msg = $"Exception occured in Report() {ex.Message}";
+                string msg = $"Exception occurred in Report() {ex.Message}";
                 Logger.LogToFile(msg);
             }
             return false;
         }
 
-        /// <summary>
-        /// Check if an IP is listed, and meets the criteria to be blocked
-        /// </summary>
-        /// <param name="ip"></param>
-        /// <returns>true if blocked</returns>
         public bool Block(string ip)
         {
-            int localMinConfidenceScore = _minConfidenceScore == null ? Config.MinConfidenceScore : (int)_minConfidenceScore;
-            int localMaxAge = _maxAge == null ? Config.MaxAgeInDays : (int)_maxAge;
-            string localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
+            int localMinConfidenceScore;
+            int localMaxAge;
+            string localApiKey;
+            localMinConfidenceScore = _minConfidenceScore == null ? Config.MinConfidenceScore : (int)_minConfidenceScore;
+            localMaxAge = _maxAge == null ? Config.MaxAgeInDays : (int)_maxAge;
+            localApiKey = string.IsNullOrEmpty(_apiKey) ? Config.ApiKey : _apiKey;
             if (string.IsNullOrEmpty(localApiKey))
             {
                 Logger.LogToFile("Api key not set");
                 return false;
             }
-            if(localMaxAge > 365 || localMaxAge < 1)
+            if (localMaxAge > 365 || localMaxAge < 1)
             {
                 Logger.LogToFile("MaxAgeInDays out of valid range 1-365");
                 return false;
             }
-            if(localMinConfidenceScore < 1 || localMinConfidenceScore > 100)
+            if (localMinConfidenceScore < 1 || localMinConfidenceScore > 100)
             {
-                Logger.LogToFile("MinConfidenceScore out of valid range 0-100");
+                Logger.LogToFile("MinConfidenceScore out of valid range 1-100");
                 return false;
             }
 
@@ -121,19 +112,18 @@ namespace AbuseIPDBCacheComponent
             if (Config.LoggingEnabled)
                 stopwatch = Stopwatch.StartNew();
 
-            ClearExpiredDB();
             SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
             SQLiteCommand command = connection.CreateCommand();
-            
-            // Check if cached data exists and is not expired
-            if (DatabaseManager.TryGetCachedResponse(command, ip, out response))
-            {
-                response.data.isSuccess = true;
-                response.data.isFromCache = true;
-                if(Config.LoggingEnabled)
-                    Logger.LogToFile($"retreived cached data for {ip} score {response.data.abuseConfidenceScore} expires UTC {response.data.expirationDateTime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+            ClearExpiredDB(command);
 
-                if (response != null && response.data != null && response.data.abuseConfidenceScore < localMinConfidenceScore)
+            if (DatabaseManager.TryGetCachedResponse(command, ip, out _response))
+            {
+                _response.data.isSuccess = true;
+                _response.data.isFromCache = true;
+                if (Config.LoggingEnabled)
+                    Logger.LogToFile($"retrieved cached data for {ip} score {_response.data.abuseConfidenceScore} expires UTC {_response.data.expirationDateTime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+
+                if (_response != null && _response.data != null && _response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
                     DatabaseManager.CloseConnection(connection);
                     return false;
@@ -150,7 +140,7 @@ namespace AbuseIPDBCacheComponent
                 HttpClient client = HttpClientSingleton.Instance;
                 using (var request = new HttpRequestMessage(HttpMethod.Get, "report"))
                 {
-                    request.Headers.Add("Key", Config.ApiKey);
+                    request.Headers.Add("Key", localApiKey);
 
                     NameValueCollection queryString = HttpUtility.ParseQueryString(string.Empty);
                     queryString.Add("ipAddress", ip);
@@ -160,20 +150,17 @@ namespace AbuseIPDBCacheComponent
 
                     if (httpResponse.IsSuccessStatusCode)
                     {
-                        if(Config.LoggingEnabled)
+                        if (Config.LoggingEnabled)
                             Logger.LogToFile($"request to {request.RequestUri} successful {httpResponse.StatusCode} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                         using (var responseStream = httpResponse.Content.ReadAsStreamAsync().GetAwaiter().GetResult())
                         {
-                            response = JsonSerializer.Deserialize<AbuseIpDbResponse>(responseStream);
+                            _response = JsonSerializer.Deserialize<AbuseIpDbResponse>(responseStream);
                         }
-                        response.data.isSuccess = true;
+                        _response.data.isSuccess = true;
 
-                        // Cache the response, dont wait on it
-#pragma warning disable 4014
-                        DatabaseManager.CacheResponseAndClose(command, ip, response);
-#pragma warning restore 4014
-                        return response.data.abuseConfidenceScore >= localMinConfidenceScore;
+                        DatabaseManager.CacheResponseAndClose(command, ip, _response);
+                        return _response.data.abuseConfidenceScore >= localMinConfidenceScore;
                     }
                     else
                     {
@@ -187,92 +174,90 @@ namespace AbuseIPDBCacheComponent
             catch (Exception ex)
             {
                 DatabaseManager.CloseConnection(connection);
-                Logger.LogToFile($"Exception occured in Block() {ex.Message}");
+                Logger.LogToFile($"Exception occurred in Block() {ex.Message}");
                 Logger.LogToFile(ex.InnerException.Message);
                 return false;
             }
         }
 
-
-
         public bool IsFromCache()
         {
-            return response?.data?.isFromCache ?? false;
+            return _response?.data?.isFromCache ?? false;
         }
 
         public bool IsSuccess()
         {
-            return response?.data?.isSuccess ?? false;
+            return _response?.data?.isSuccess ?? false;
         }
 
         public string GetIpAddress()
         {
-            return response?.data?.ipAddress;
+            return _response?.data?.ipAddress;
         }
 
         public bool IsPublic()
         {
-            return response?.data?.isPublic ?? false;
+            return _response?.data?.isPublic ?? false;
         }
 
         public int GetIpVersion()
         {
-            return response?.data?.ipVersion ?? 0;
+            return _response?.data?.ipVersion ?? 0;
         }
 
         public bool IsWhitelisted()
         {
-            return response?.data?.isWhitelisted ?? false;
+            return _response?.data?.isWhitelisted ?? false;
         }
 
         public int GetAbuseConfidenceScore()
         {
-            return response?.data?.abuseConfidenceScore ?? 0;
+            return _response?.data?.abuseConfidenceScore ?? 0;
         }
 
         public string GetCountryCode()
         {
-            return response?.data?.countryCode;
+            return _response?.data?.countryCode;
         }
 
         public string GetCountryName()
         {
-            return response?.data?.countryName;
+            return _response?.data?.countryName;
         }
 
         public string GetUsageType()
         {
-            return response?.data?.usageType;
+            return _response?.data?.usageType;
         }
 
         public string GetISP()
         {
-            return response?.data?.isp;
+            return _response?.data?.isp;
         }
 
         public string GetDomain()
         {
-            return response?.data?.domain;
+            return _response?.data?.domain;
         }
 
         public bool IsTor()
         {
-            return response?.data?.isTor ?? false;
+            return _response?.data?.isTor ?? false;
         }
 
         public int GetTotalReports()
         {
-            return response?.data?.totalReports ?? 0;
+            return _response?.data?.totalReports ?? 0;
         }
 
         public int GetNumDistinctUsers()
         {
-            return response?.data?.numDistinctUsers ?? 0;
+            return _response?.data?.numDistinctUsers ?? 0;
         }
 
         public DateTime GetLastReportedAt()
         {
-            return response?.data?.lastReportedAt ?? DateTime.MinValue;
+            return _response?.data?.lastReportedAt ?? DateTime.MinValue;
         }
 
         public void SetApiKey(string apiKey)
@@ -306,12 +291,9 @@ namespace AbuseIPDBCacheComponent
             DatabaseManager.CloseConnection(connection);
         }
 
-        public void ClearExpiredDB()
+        private void ClearExpiredDB(SQLiteCommand command)
         {
-            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
-            SQLiteCommand command = connection.CreateCommand();
             DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')");
-            DatabaseManager.CloseConnection(connection);
         }
     }
 

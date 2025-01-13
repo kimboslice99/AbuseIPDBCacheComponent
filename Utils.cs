@@ -23,7 +23,7 @@ namespace AbuseIPDBCacheComponent
                 using (StreamWriter writer = new StreamWriter(path, true))
                 {
                     writer.WriteLine($"{DateTime.Now}: {message}");
-                } 
+                }
             }
             catch
             {
@@ -70,7 +70,6 @@ namespace AbuseIPDBCacheComponent
             {
                 string cacheTimeSetting = AssemblyConfig.AppSettings.Settings["CacheTimeHours"]?.Value;
                 double setting = !string.IsNullOrEmpty(cacheTimeSetting) ? Convert.ToDouble(cacheTimeSetting) : 6;
-                Logger.LogToFile($"Cache time setting {setting} hours");
                 return setting;
             }
         }
