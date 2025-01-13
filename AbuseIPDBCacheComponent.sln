@@ -14,6 +14,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D5A8D15B-EFC9-494B-9366-A57073BD9DC7}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
+		testscript.ps1 = testscript.ps1
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfigurationTool", "ConfigurationTool\ConfigurationTool.csproj", "{FC4ABBEC-E6FD-4279-BFD2-2281A196E4B0}"
