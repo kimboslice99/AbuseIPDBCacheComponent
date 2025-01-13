@@ -7,9 +7,6 @@ namespace AbuseIPDBCacheComponent
 {
     public static class DatabaseManager
     {
-        private static SQLiteConnection _connection;
-        private static SQLiteCommand _command;
-
         public static string ConnectionString => $"Data Source={DatabasePath};Version=3;";
 
         public static string DatabasePath
@@ -26,28 +23,29 @@ namespace AbuseIPDBCacheComponent
         /// Creates SQLite connection and opens it
         /// </summary>
         /// <returns>Opened SQLite connection</returns>
-        public static void CreateConnection()
+        public static SQLiteConnection CreateConnectionAndOpen()
         {
-            _connection = new SQLiteConnection(ConnectionString);
-            _connection.Open();
-            _command = _connection.CreateCommand();
-            _command.CommandText = "PRAGMA busy_timeout = 10000;";
-            _command.ExecuteNonQuery();
+            SQLiteConnection connection = new SQLiteConnection(ConnectionString);
+            connection.Open();
+            SQLiteCommand command = connection.CreateCommand();
+            command.CommandText = "PRAGMA busy_timeout = 10000;";
+            command.ExecuteNonQuery();
+            return connection;
         }
 
-        public static void CloseConnection()
+        public static void CloseConnection(SQLiteConnection connection)
         {
-            if(_connection != null && _connection.State != System.Data.ConnectionState.Closed)
+            if(connection != null && connection.State != System.Data.ConnectionState.Closed)
             {
-                _connection.Close();
+                connection.Close();
             }
         }
 
-        public static void InitializeDatabase()
+        public static void InitializeDatabase(SQLiteCommand command)
         {
             // WAL
-            _command.CommandText = "PRAGMA journal_mode=WAL";
-            _command.ExecuteNonQuery();
+            command.CommandText = "PRAGMA journal_mode=WAL";
+            command.ExecuteNonQuery();
             string sql = @"CREATE TABLE IF NOT EXISTS CachedResponses (
                             IpAddress TEXT PRIMARY KEY,
                             IsPublic INTEGER,
@@ -65,8 +63,8 @@ namespace AbuseIPDBCacheComponent
                             LastReportedAt TEXT,
                             ExpirationDateTime TEXT
                         )";
-            _command.CommandText = sql;
-            _command.ExecuteNonQuery();
+            command.CommandText = sql;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -75,11 +73,11 @@ namespace AbuseIPDBCacheComponent
         /// <param name="ip"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static async Task CacheResponseAndClose(string ip, AbuseIpDbResponse response)
+        public static async Task CacheResponseAndClose(SQLiteCommand command, string ip, AbuseIpDbResponse response)
         {
             await Task.Run(() =>
             {
-                _command.CommandText = @"INSERT OR REPLACE INTO CachedResponses (
+                command.CommandText = @"INSERT OR REPLACE INTO CachedResponses (
                                 IpAddress,
                                 IsPublic,
                                 IpVersion,
@@ -112,23 +110,23 @@ namespace AbuseIPDBCacheComponent
                                 @LastReportedAt,
                                 @ExpirationDateTime)";
 
-                _command.Parameters.AddWithValue("@IpAddress", ip);
-                _command.Parameters.AddWithValue("@IsPublic", response.data.isPublic);
-                _command.Parameters.AddWithValue("@IpVersion", response.data.ipVersion);
-                _command.Parameters.AddWithValue("@IsWhitelisted", response.data.isWhitelisted);
-                _command.Parameters.AddWithValue("@AbuseConfidenceScore", response.data.abuseConfidenceScore);
-                _command.Parameters.AddWithValue("@CountryCode", response.data.countryCode);
-                _command.Parameters.AddWithValue("@CountryName", response.data.countryName);
-                _command.Parameters.AddWithValue("@UsageType", response.data.usageType);
-                _command.Parameters.AddWithValue("@ISP", response.data.isp);
-                _command.Parameters.AddWithValue("@Domain", response.data.domain);
-                _command.Parameters.AddWithValue("@IsTor", response.data.isTor);
-                _command.Parameters.AddWithValue("@TotalReports", response.data.totalReports);
-                _command.Parameters.AddWithValue("@NumDistinctUsers", response.data.numDistinctUsers);
-                _command.Parameters.AddWithValue("@LastReportedAt", response.data.lastReportedAt);
-                _command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(Config.CacheTime));
-                _command.ExecuteNonQuery();
-                _command.Connection.Close();
+                command.Parameters.AddWithValue("@IpAddress", ip);
+                command.Parameters.AddWithValue("@IsPublic", response.data.isPublic);
+                command.Parameters.AddWithValue("@IpVersion", response.data.ipVersion);
+                command.Parameters.AddWithValue("@IsWhitelisted", response.data.isWhitelisted);
+                command.Parameters.AddWithValue("@AbuseConfidenceScore", response.data.abuseConfidenceScore);
+                command.Parameters.AddWithValue("@CountryCode", response.data.countryCode);
+                command.Parameters.AddWithValue("@CountryName", response.data.countryName);
+                command.Parameters.AddWithValue("@UsageType", response.data.usageType);
+                command.Parameters.AddWithValue("@ISP", response.data.isp);
+                command.Parameters.AddWithValue("@Domain", response.data.domain);
+                command.Parameters.AddWithValue("@IsTor", response.data.isTor);
+                command.Parameters.AddWithValue("@TotalReports", response.data.totalReports);
+                command.Parameters.AddWithValue("@NumDistinctUsers", response.data.numDistinctUsers);
+                command.Parameters.AddWithValue("@LastReportedAt", response.data.lastReportedAt);
+                command.Parameters.AddWithValue("@ExpirationDateTime", DateTime.Now.AddHours(Config.CacheTime));
+                command.ExecuteNonQuery();
+                command.Connection.Close();
             });
         }
 
@@ -140,14 +138,14 @@ namespace AbuseIPDBCacheComponent
         /// <param name="ip"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static bool TryGetCachedResponse(string ip, out AbuseIpDbResponse response)
+        public static bool TryGetCachedResponse(SQLiteCommand command, string ip, out AbuseIpDbResponse response)
         {
             response = null;
-            _command.CommandText = "SELECT * FROM CachedResponses WHERE IpAddress = @IpAddress";
-            _command.Parameters.AddWithValue("@IpAddress", ip);
-            using (SQLiteDataReader reader = _command.ExecuteReader())
+            command.CommandText = "SELECT * FROM CachedResponses WHERE IpAddress = @IpAddress";
+            command.Parameters.AddWithValue("@IpAddress", ip);
+            using (SQLiteDataReader reader = command.ExecuteReader())
             {
-                _command.Parameters.Clear();
+                command.Parameters.Clear();
                 if (reader.Read())
                 {
                     DateTime expirationDateTime = reader.GetDateTime(reader.GetOrdinal("ExpirationDateTime"));
@@ -183,10 +181,10 @@ namespace AbuseIPDBCacheComponent
             return false;
         }
 
-        public static void DBOperation(string commandString)
+        public static void DBOperation(SQLiteCommand command, string commandString)
         {
-            _command.CommandText = commandString;
-            _command.ExecuteNonQuery();
+            command.CommandText = commandString;
+            command.ExecuteNonQuery();
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Web;
 using System.Collections.Specialized;
 using System.Text.Json;
 using System.Diagnostics;
+using System.Data.SQLite;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -21,9 +22,10 @@ namespace AbuseIPDBCacheComponent
         static AbuseIPDBClient()
         {
             AppDomain.CurrentDomain.AssemblyResolve += Config.MyResolveEventHandler;
-            DatabaseManager.CreateConnection();
-            DatabaseManager.InitializeDatabase();
-            DatabaseManager.CloseConnection();
+            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.InitializeDatabase(command);
+            DatabaseManager.CloseConnection(connection);
         }
 
         /// <summary>
@@ -120,10 +122,11 @@ namespace AbuseIPDBCacheComponent
                 stopwatch = Stopwatch.StartNew();
 
             ClearExpiredDB();
-            DatabaseManager.CreateConnection();
+            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
+            SQLiteCommand command = connection.CreateCommand();
             
             // Check if cached data exists and is not expired
-            if (DatabaseManager.TryGetCachedResponse(ip, out response))
+            if (DatabaseManager.TryGetCachedResponse(command, ip, out response))
             {
                 response.data.isSuccess = true;
                 response.data.isFromCache = true;
@@ -132,12 +135,12 @@ namespace AbuseIPDBCacheComponent
 
                 if (response != null && response.data != null && response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
-                    DatabaseManager.CloseConnection();
+                    DatabaseManager.CloseConnection(connection);
                     return false;
                 }
                 else
                 {
-                    DatabaseManager.CloseConnection();
+                    DatabaseManager.CloseConnection(connection);
                     return true;
                 }
             }
@@ -168,13 +171,13 @@ namespace AbuseIPDBCacheComponent
 
                         // Cache the response, dont wait on it
 #pragma warning disable 4014
-                        DatabaseManager.CacheResponseAndClose(ip, response);
+                        DatabaseManager.CacheResponseAndClose(command, ip, response);
 #pragma warning restore 4014
                         return response.data.abuseConfidenceScore >= localMinConfidenceScore;
                     }
                     else
                     {
-                        DatabaseManager.CloseConnection();
+                        DatabaseManager.CloseConnection(connection);
                         Logger.LogToFile($"request to {request.RequestUri} unsuccessful {httpResponse.ReasonPhrase} {httpResponse.StatusCode}");
                         // Allow the client to connect if API failure code
                         return false;
@@ -183,7 +186,7 @@ namespace AbuseIPDBCacheComponent
             }
             catch (Exception ex)
             {
-                DatabaseManager.CloseConnection();
+                DatabaseManager.CloseConnection(connection);
                 Logger.LogToFile($"Exception occured in Block() {ex.Message}");
                 Logger.LogToFile(ex.InnerException.Message);
                 return false;
@@ -289,23 +292,26 @@ namespace AbuseIPDBCacheComponent
 
         public void VacuumDB()
         {
-            DatabaseManager.CreateConnection();
-            DatabaseManager.DBOperation("VACUUM");
-            DatabaseManager.CloseConnection();
+            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "VACUUM");
+            DatabaseManager.CloseConnection(connection);
         }
 
         public void ClearDB()
         {
-            DatabaseManager.CreateConnection();
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses");
-            DatabaseManager.CloseConnection();
+            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses");
+            DatabaseManager.CloseConnection(connection);
         }
 
         public void ClearExpiredDB()
         {
-            DatabaseManager.CreateConnection();
-            DatabaseManager.DBOperation("DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')");
-            DatabaseManager.CloseConnection();
+            SQLiteConnection connection = DatabaseManager.CreateConnectionAndOpen();
+            SQLiteCommand command = connection.CreateCommand();
+            DatabaseManager.DBOperation(command, "DELETE FROM CachedResponses WHERE DATETIME(SUBSTR(ExpirationDateTime, 0, 20)) <= DATETIME('NOW')");
+            DatabaseManager.CloseConnection(connection);
         }
     }
 
