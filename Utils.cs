@@ -7,7 +7,6 @@ using System.Net;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
 
 namespace AbuseIPDBCacheComponent
 {
@@ -53,24 +52,24 @@ namespace AbuseIPDBCacheComponent
                 switch (securityProtocolSetting)
                 {
                     case "TLS1.2":
-                        Logger.LogToFile("Found protocol config element, using TLS1.2");
+                        Logger.LogToFile("Found protocol config element (TLS1.2)");
                         return SecurityProtocolType.Tls12;
                     case "TLS1.3":
-                        Logger.LogToFile("Found protocol config element, using TLS1.3");
+                        Logger.LogToFile("Found protocol config element (TLS1.3)");
                         return SecurityProtocolType.Tls13;
                     default:
-                        Logger.LogToFile("Unable to locate protocol config element, using TLS1.2");
+                        Logger.LogToFile("Unable to locate valid protocol config entry, using TLS1.2");
                         return SecurityProtocolType.Tls12;
                 }
             }
         }
 
-        public static int CacheTime
+        public static double CacheTime
         {
             get
             {
                 string cacheTimeSetting = AssemblyConfig.AppSettings.Settings["CacheTimeHours"]?.Value;
-                int setting = !string.IsNullOrEmpty(cacheTimeSetting) ? Convert.ToInt32(cacheTimeSetting) : 6;
+                double setting = !string.IsNullOrEmpty(cacheTimeSetting) ? Convert.ToDouble(cacheTimeSetting) : 6;
                 Logger.LogToFile($"Cache time setting {setting} hours");
                 return setting;
             }

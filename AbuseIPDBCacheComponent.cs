@@ -8,45 +8,10 @@ using System.Diagnostics;
 
 namespace AbuseIPDBCacheComponent
 {
-    // Define a COM interface
     [Guid("ECED3D83-2DE5-4C53-8B57-E95C6D90422D")]
-    [InterfaceType(ComInterfaceType.InterfaceIsIDispatch)]
-    // both the class and its interface must be ComVisible(true) for it to work in all scriping environments
-    [ComVisible(true)]
-    public interface IAbuseIPDB
-    {
-        bool Block(string ip);
-        bool Report(string ip, string categories, string comment);
-        // all of the check items
-        bool IsSuccess();
-        bool IsFromCache();
-        string GetIpAddress();
-        bool IsPublic();
-        int GetIpVersion();
-        bool IsWhitelisted();
-        int GetAbuseConfidenceScore();
-        string GetCountryCode();
-        string GetCountryName();
-        string GetUsageType();
-        string GetISP();
-        string GetDomain();
-        bool IsTor();
-        int GetTotalReports();
-        int GetNumDistinctUsers();
-        DateTime GetLastReportedAt();
-        void SetApiKey(string apiKey);
-        void SetMinConfidenceScore(int minConfidenceScore);
-        void SetMaxAge(int maxAge);
-        void VacuumDB();
-        void ClearDB();
-        void ClearExpiredDB();
-    }
-
-    // Define a class that implements the COM interface
-    [Guid("EE286CF0-BB11-4AA7-BF75-3127E643CB6C")]
     [ClassInterface(ClassInterfaceType.None)]
     [ComVisible(true)]
-    public class AbuseIPDBClient : IAbuseIPDB
+    public class AbuseIPDBClient
     {
         private AbuseIpDbResponse response;
         private string _apiKey;

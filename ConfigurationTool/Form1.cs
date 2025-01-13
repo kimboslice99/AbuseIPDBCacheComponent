@@ -144,6 +144,16 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             }
         }
 
+        private void digitOrDot_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Check if the entered character is a digit or a control character (like backspace)
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
+            {
+                // If it's not, set Handled to true to cancel the key press
+                e.Handled = true;
+            }
+        }
+
         private bool CurrentUserHasWriteAccess()
         {
             string testFile = Path.Combine(

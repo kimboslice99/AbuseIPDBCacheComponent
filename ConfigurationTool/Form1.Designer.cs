@@ -91,7 +91,7 @@ namespace AbuseIPDBCacheComponent_ConfigurationTool
             this.cacheTimeBox.Name = "cacheTimeBox";
             this.cacheTimeBox.Size = new System.Drawing.Size(96, 20);
             this.cacheTimeBox.TabIndex = 4;
-            this.cacheTimeBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.digit_KeyPress);
+            this.cacheTimeBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.digitOrDot_KeyPress);
             // 
             // labelCacheTimeHours
             // 
