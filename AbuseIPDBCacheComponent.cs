@@ -121,7 +121,7 @@ namespace AbuseIPDBCacheComponent
                 _response.data.isSuccess = true;
                 _response.data.isFromCache = true;
                 if (Config.LoggingEnabled)
-                    Logger.LogToFile($"retrieved cached data for {ip} score {_response.data.abuseConfidenceScore} expires UTC {_response.data.expirationDateTime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
+                    Logger.LogToFile($"retrieved cached data for {ip} score {_response.data.abuseConfidenceScore} expires {_response.data.expirationDateTime} process time {stopwatch.Elapsed.TotalMilliseconds}ms");
 
                 if (_response != null && _response.data != null && _response.data.abuseConfidenceScore < localMinConfidenceScore)
                 {
@@ -158,7 +158,6 @@ namespace AbuseIPDBCacheComponent
                             _response = JsonSerializer.Deserialize<AbuseIpDbResponse>(responseStream);
                         }
                         _response.data.isSuccess = true;
-
                         DatabaseManager.CacheResponseAndClose(command, ip, _response);
                         return _response.data.abuseConfidenceScore >= localMinConfidenceScore;
                     }
